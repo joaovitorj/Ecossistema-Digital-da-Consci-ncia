@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ecossistema Digital da Consciência</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --preto: #0B0B0A;
+    --preto-suave: #131211;
+    --dourado: #B8935A;
+    --dourado-fraco: #8a6f47;
+    --terra: #6B3226;
+    --osso: #EDEAE3;
+    --osso-fraco: #8a877d;
+    --linha: rgba(237, 234, 227, 0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--preto);
+    color: var(--osso);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+  }
+
+  #app {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .tela {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.9s ease;
+  }
+  .tela.ativa {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ---------- Campo de constelação (fundo ambiente) ---------- */
+  #constelacao {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ---------- TELA 1: Entrada ---------- */
+  #tela-entrada {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    z-index: 2;
+  }
+  .selo {
+    width: 46px;
+    height: 46px;
+    border: 1px solid var(--dourado-fraco);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: surgir 1.4s ease forwards 0.2s;
+  }
+  .selo::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--dourado);
+    border-radius: 50%;
+    box-shadow: 0 0 12px 2px var(--dourado);
+  }
+  .titulo-marca {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    max-width: 320px;
+    opacity: 0;
+    animation: surgir 1.4s ease forwards 0.5s;
+  }
+  .subtitulo-marca {
+    font-size: 13px;
+    color: var(--osso-fraco);
+    letter-spacing: 0.06em;
+    margin-top: 14px;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: surgir 1.4s ease forwards 0.9s;
+  }
+  .entrar-btn {
+    margin-top: 56px;
+    background: none;
+    border: 1px solid var(--linha);
+    color: var(--osso);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 15px 38px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    opacity: 0;
+    animation: surgir 1.4s ease forwards 1.3s;
+    letter-spacing: 0.02em;
+  }
+  .entrar-btn:hover {
+    border-color: var(--dourado-fraco);
+    background: rgba(184, 147, 90, 0.06);
+  }
+  .link-criar-conta {
+    margin-top: 16px;
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: rgba(138, 135, 125, 0.3);
+    opacity: 0;
+    animation: surgir 1.4s ease forwards 1.45s;
+  }
+  .entrada-rodape {
+    position: absolute;
+    bottom: 36px;
+    font-size: 11px;
+    color: var(--osso-fraco);
+    opacity: 0;
+    animation: surgir 1.4s ease forwards 1.6s;
+    letter-spacing: 0.03em;
+  }
+
+  @keyframes surgir {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- TELA CADASTRO ---------- */
+  #tela-cadastro {
+    z-index: 2;
+    padding: 0;
+  }
+  .cadastro-topo {
+    display: flex;
+    align-items: center;
+    padding: 22px 24px 0;
+  }
+  .cadastro-conteudo {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 28px 40px;
+    max-width: 440px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .cadastro-titulo {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .cadastro-subtitulo {
+    font-size: 13px;
+    color: var(--osso-fraco);
+    line-height: 1.5;
+    margin-bottom: 32px;
+  }
+  .campo-grupo {
+    margin-bottom: 20px;
+  }
+  .campo-label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--osso-fraco);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .campo-input {
+    width: 100%;
+    background: rgba(237, 234, 227, 0.03);
+    border: 1px solid var(--linha);
+    color: var(--osso);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.35s ease, background 0.35s ease;
+  }
+  .campo-input:focus {
+    border-color: var(--dourado-fraco);
+    background: rgba(184, 147, 90, 0.04);
+  }
+  .campo-input::placeholder {
+    color: var(--osso-fraco);
+    opacity: 0.45;
+  }
+  .campo-ajuda {
+    font-size: 11px;
+    color: var(--osso-fraco);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+  .campo-erro {
+    font-size: 11.5px;
+    color: #c17a5c;
+    margin-top: 6px;
+    display: none;
+  }
+  .campo-erro.visivel { display: block; }
+  .campo-input.com-erro {
+    border-color: #8a4a35;
+  }
+
+  .aviso-privacidade {
+    display: flex;
+    gap: 12px;
+    padding: 15px;
+    background: rgba(184, 147, 90, 0.04);
+    border: 1px solid rgba(184, 147, 90, 0.12);
+    border-radius: 12px;
+    margin: 24px 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--osso-fraco);
+  }
+  .aviso-privacidade strong {
+    color: var(--osso);
+  }
+
+  .criar-conta-btn {
+    width: 100%;
+    background: var(--dourado);
+    border: none;
+    color: var(--preto);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 14.5px;
+    padding: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.3s ease;
+  }
+  .criar-conta-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .ja-tem-conta {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 13px;
+    color: var(--osso-fraco);
+  }
+  .ja-tem-conta a {
+    color: var(--dourado);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .interior-valor {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--osso);
+    padding: 14px 16px;
+    background: rgba(237, 234, 227, 0.02);
+    border: 1px solid var(--linha);
+    border-radius: 10px;
+  }
+
+  /* ---------- TELA LIVRO — experiência imersiva ---------- */
+  #tela-livro {
+    z-index: 2;
+    padding: 0;
+  }
+  .livro-pagina {
+    position: relative;
+    height: 100%;
+    overflow-y: auto;
+    background:
+      radial-gradient(ellipse at top, rgba(184, 147, 90, 0.06), transparent 60%),
+      linear-gradient(180deg, #16130E 0%, #0B0A08 100%);
+    padding: 0 0 60px;
+  }
+  .livro-topo-fixo {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 22px 24px 14px;
+    background: linear-gradient(180deg, #16130E 60%, transparent);
+  }
+  .voltar-clara {
+    color: var(--osso-fraco);
+  }
+
+  .livro-citacoes-fundo {
+    position: relative;
+    padding: 10px 32px;
+    filter: blur(1.6px);
+    opacity: 0.22;
+    user-select: none;
+    pointer-events: none;
+  }
+  .livro-citacoes-fundo p {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    line-height: 2.1;
+    color: var(--osso-fraco);
+    margin-bottom: 14px;
+  }
+
+  .livro-citacao-foco {
+    position: relative;
+    margin: -86px 26px 40px;
+    padding: 30px 26px 26px;
+    background: rgba(11, 10, 8, 0.82);
+    backdrop-filter: blur(2px);
+    border: 1px solid rgba(184, 147, 90, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .livro-aspas {
+    font-family: 'Fraunces', serif;
+    font-size: 44px;
+    color: var(--dourado-fraco);
+    line-height: 0.5;
+    display: block;
+    margin-bottom: 10px;
+    opacity: 0.7;
+  }
+  .livro-citacao-foco p {
+    font-family: 'Fraunces', serif;
+    font-size: 21px;
+    line-height: 1.5;
+    color: var(--osso);
+  }
+
+  .livro-info {
+    padding: 6px 30px 20px;
+    max-width: 480px;
+  }
+  .livro-titulo {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .livro-subtitulo {
+    font-size: 12.5px;
+    color: var(--dourado-fraco);
+    letter-spacing: 0.03em;
+    margin-bottom: 20px;
+  }
+  .livro-apresentacao {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--osso);
+    opacity: 0.85;
+    margin-bottom: 16px;
+  }
+  .livro-autor-nota {
+    font-size: 12.5px;
+    color: var(--osso-fraco);
+    font-style: italic;
+    margin-bottom: 4px;
+  }
+
+  /* ---------- TELA 2: Reconhecimento (perguntas) ---------- */
+  #tela-reconhecimento {
+    z-index: 2;
+    padding: 0;
+  }
+  .reconhecimento-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 28px 0;
+  }
+  .voltar-simples {
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .marca-mini {
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    color: var(--osso-fraco);
+    letter-spacing: 0.04em;
+  }
+
+  .pergunta-palco {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 30px 40px;
+    text-align: center;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .pergunta-numero {
+    font-size: 11px;
+    color: var(--dourado-fraco);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    opacity: 0.8;
+  }
+  .pergunta-texto {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 25px;
+    line-height: 1.45;
+    margin-bottom: 40px;
+    min-height: 110px;
+    display: flex;
+    align-items: center;
+  }
+  .opcoes-resposta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .opcao {
+    background: rgba(237, 234, 227, 0.02);
+    border: 1px solid var(--linha);
+    color: var(--osso);
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    padding: 17px 22px;
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.35s ease;
+  }
+  .opcao:hover {
+    border-color: var(--dourado-fraco);
+    background: rgba(184, 147, 90, 0.05);
+    transform: translateX(2px);
+  }
+  .opcao.escolhida {
+    border-color: var(--dourado);
+    background: rgba(184, 147, 90, 0.09);
+  }
+
+  .campo-livre {
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--linha);
+    color: var(--osso);
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    padding: 10px 4px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.4s ease;
+  }
+  .campo-livre:focus { border-color: var(--dourado-fraco); }
+  .campo-livre::placeholder { color: var(--osso-fraco); opacity: 0.5; }
+
+  .continuar-btn {
+    margin-top: 34px;
+    background: var(--dourado);
+    border: none;
+    color: var(--preto);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 14px 34px;
+    border-radius: 100px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.2s ease;
+    letter-spacing: 0.02em;
+  }
+  .continuar-btn.pronto { opacity: 1; pointer-events: all; }
+  .continuar-btn:active { transform: scale(0.97); }
+
+  .pular-link {
+    margin-top: 16px;
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-size: 12.5px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: rgba(138, 135, 125, 0.3);
+  }
+
+  /* ---------- TELA 3: Território (hub principal) ---------- */
+  #tela-territorio {
+    z-index: 2;
+    padding: 26px 24px 100px;
+    overflow-y: auto;
+  }
+  .territorio-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .saudacao {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+  .saudacao span { color: var(--dourado); }
+  .data-hoje {
+    font-size: 12px;
+    color: var(--osso-fraco);
+    margin-top: 6px;
+  }
+  .avatar-circulo {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--dourado-fraco);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    color: var(--dourado);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .menu-perfil {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    background: var(--preto-suave);
+    border: 1px solid var(--linha);
+    border-radius: 12px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 10;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .menu-perfil.aberto {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  .menu-perfil button {
+    background: none;
+    border: none;
+    color: var(--osso);
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    text-align: left;
+    padding: 11px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .menu-perfil button:hover {
+    background: rgba(184, 147, 90, 0.08);
+  }
+
+  /* ---------- Menu de contexto (Editar / Apagar / Enviar) ---------- */
+  #overlay-menu-item {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 30;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: flex-end;
+  }
+  #overlay-menu-item.aberto {
+    opacity: 1;
+    pointer-events: all;
+  }
+  #overlay-menu-post {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 30;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: flex-end;
+  }
+  #overlay-menu-post.aberto {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .menu-item-painel {
+    background: var(--preto-suave);
+    border-top: 1px solid var(--linha);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    padding: 10px 10px calc(20px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #overlay-menu-item.aberto .menu-item-painel {
+    transform: translateY(0);
+  }
+  #overlay-menu-post.aberto .menu-item-painel {
+    transform: translateY(0);
+  }
+  .menu-item-alca {
+    width: 36px;
+    height: 4px;
+    background: var(--linha);
+    border-radius: 4px;
+    margin: 6px auto 14px;
+  }
+  .menu-item-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--osso);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    text-align: left;
+    padding: 15px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.2s ease;
+  }
+  .menu-item-btn:active {
+    background: rgba(237, 234, 227, 0.05);
+  }
+  .menu-item-btn.perigo {
+    color: #c17a5c;
+  }
+  .menu-item-btn.perigo:active {
+    background: rgba(193, 122, 92, 0.08);
+  }
+
+  .frase-dia {
+    margin: 26px 0 30px;
+    padding: 20px;
+    border-left: 2px solid var(--dourado-fraco);
+    background: rgba(184, 147, 90, 0.03);
+    border-radius: 0 12px 12px 0;
+  }
+  .frase-dia p {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15.5px;
+    line-height: 1.55;
+    color: var(--osso);
+  }
+  .frase-dia .fonte {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-size: 11px;
+    color: var(--osso-fraco);
+    margin-top: 10px;
+    letter-spacing: 0.03em;
+  }
+
+  .secao-label {
+    font-size: 11px;
+    color: var(--osso-fraco);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 30px 0 14px;
+  }
+
+  .caminhos-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .caminho-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    background: var(--preto-suave);
+    border: 1px solid var(--linha);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    text-align: left;
+  }
+  .caminho-card:hover {
+    border-color: var(--dourado-fraco);
+    transform: translateY(-1px);
+  }
+  .caminho-icone {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 17px;
+  }
+  .caminho-textos h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 15.5px;
+    margin-bottom: 3px;
+  }
+  .caminho-textos p {
+    font-size: 12.5px;
+    color: var(--osso-fraco);
+    line-height: 1.4;
+  }
+
+  /* ---------- Navegação inferior ---------- */
+  #nav-inferior {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    display: flex;
+    justify-content: space-around;
+    padding: 14px 10px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--preto) 60%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  #nav-inferior.visivel { opacity: 1; pointer-events: all; }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-size: 10.5px;
+    cursor: pointer;
+    padding: 6px 14px;
+    transition: color 0.3s ease;
+    letter-spacing: 0.02em;
+  }
+  .nav-item.ativo { color: var(--dourado); }
+  .nav-icone { font-size: 19px; }
+
+  /* ---------- TELA 4: Criação pessoal ---------- */
+  #tela-criacao {
+    z-index: 2;
+    padding: 26px 24px 100px;
+    overflow-y: auto;
+  }
+  .criacao-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+  }
+  .criacao-titulo {
+    font-family: 'Fraunces', serif;
+    font-size: 21px;
+  }
+  .nova-anotacao-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--dourado);
+    color: var(--preto);
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .criacao-abas {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--linha);
+  }
+  .criacao-aba {
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    padding: 10px 6px 14px;
+    cursor: pointer;
+    position: relative;
+    margin-right: 18px;
+    transition: color 0.3s ease;
+  }
+  .criacao-aba.ativa {
+    color: var(--dourado);
+  }
+  .criacao-aba.ativa::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--dourado);
+    border-radius: 2px;
+  }
+
+  .painel-aba {
+    display: none;
+  }
+  .painel-aba.ativo {
+    display: block;
+  }
+
+  .agenda-item {
+    background: var(--preto-suave);
+    border: 1px solid var(--linha);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+  }
+  .agenda-item:active {
+    border-color: var(--dourado-fraco);
+  }
+  .agenda-item.tipo-compromisso {
+    border-left: 2px solid var(--dourado);
+  }
+  .agenda-item.tipo-intencao {
+    border-left: 2px solid var(--terra);
+  }
+  .agenda-marcador {
+    font-size: 11px;
+    color: var(--osso-fraco);
+    white-space: nowrap;
+    padding-top: 2px;
+    min-width: 62px;
+  }
+  .agenda-conteudo {
+    flex: 1;
+  }
+  .agenda-texto {
+    font-family: 'Fraunces', serif;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--osso);
+  }
+  .agenda-tipo-label {
+    font-size: 10px;
+    color: var(--dourado-fraco);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 6px;
+    display: block;
+  }
+  .anotacao-vazia {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--osso-fraco);
+  }
+  .anotacao-vazia p {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-style: italic;
+    line-height: 1.6;
+    max-width: 260px;
+    margin: 0 auto 22px;
+  }
+  .anotacao-card {
+    background: var(--preto-suave);
+    border: 1px solid var(--linha);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+  }
+  .anotacao-card:active {
+    border-color: var(--dourado-fraco);
+  }
+  .anotacao-card-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .anotacao-data {
+    font-size: 11px;
+    color: var(--osso-fraco);
+  }
+  .anotacao-privacidade {
+    font-size: 10.5px;
+    color: var(--dourado-fraco);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+  .anotacao-texto {
+    font-family: 'Fraunces', serif;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--osso);
+  }
+
+  /* Editor de anotação (modal simplificado) */
+  #editor-anotacao {
+    position: fixed;
+    inset: 0;
+    background: var(--preto);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 24px;
+  }
+  #editor-anotacao.aberto { transform: translateY(0); }
+  #editor-agenda {
+    position: fixed;
+    inset: 0;
+    background: var(--preto);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 24px;
+  }
+  #editor-agenda.aberto { transform: translateY(0); }
+  .agenda-tipo-seletor {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .agenda-tipo-btn {
+    flex: 1;
+    background: rgba(237, 234, 227, 0.02);
+    border: 1px solid var(--linha);
+    color: var(--osso-fraco);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .agenda-tipo-btn.ativo {
+    border-color: var(--dourado-fraco);
+    color: var(--dourado);
+    background: rgba(184, 147, 90, 0.06);
+  }
+  #texto-agenda {
+    width: 100%;
+    min-height: 110px;
+    background: none;
+    border: none;
+    color: var(--osso);
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+  }
+  #texto-agenda::placeholder { color: var(--osso-fraco); opacity: 0.5; }
+  .campos-data-hora {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .editor-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .editor-fechar {
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-size: 22px;
+    cursor: pointer;
+  }
+  .editor-salvar {
+    background: none;
+    border: none;
+    color: var(--dourado);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  #texto-anotacao {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--osso);
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    line-height: 1.7;
+    resize: none;
+    outline: none;
+  }
+  #texto-anotacao::placeholder { color: var(--osso-fraco); opacity: 0.55; }
+
+  .editor-opcao-comunidade {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--preto-suave);
+    border-radius: 12px;
+    margin-top: 16px;
+  }
+  .editor-opcao-comunidade-texto h4 {
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 3px;
+  }
+  .editor-opcao-comunidade-texto p {
+    font-size: 11.5px;
+    color: var(--osso-fraco);
+  }
+  .toggle {
+    width: 42px;
+    height: 24px;
+    background: rgba(237, 234, 227, 0.12);
+    border-radius: 100px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.3s ease;
+  }
+  .toggle.ligado { background: var(--dourado); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: var(--osso);
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.3s ease;
+  }
+  .toggle.ligado::after { transform: translateX(18px); background: var(--preto); }
+
+  /* ---------- TELA 5: Comunidade ---------- */
+  #tela-comunidade {
+    z-index: 2;
+    padding: 26px 24px 100px;
+    overflow-y: auto;
+  }
+  .comunidade-topo h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 21px;
+    margin-bottom: 6px;
+  }
+  .comunidade-topo p {
+    font-size: 13px;
+    color: var(--osso-fraco);
+    line-height: 1.5;
+    margin-bottom: 26px;
+  }
+  .aviso-suave {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(184, 147, 90, 0.05);
+    border: 1px solid rgba(184, 147, 90, 0.15);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--osso-fraco);
+  }
+  .partilha-card {
+    background: var(--preto-suave);
+    border: 1px solid var(--linha);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .partilha-card-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .partilha-autor {
+    font-size: 12px;
+    color: var(--dourado-fraco);
+    margin-bottom: 8px;
+  }
+  .partilha-opcoes-btn {
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    margin-top: -2px;
+  }
+  .partilha-texto {
+    font-family: 'Fraunces', serif;
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .partilha-acoes {
+    display: flex;
+    gap: 18px;
+  }
+  .partilha-acao {
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .comunidade-crescimento {
+    text-align: center;
+    padding: 50px 24px;
+    color: var(--osso-fraco);
+  }
+  .comunidade-crescimento p {
+    font-family: 'Fraunces', serif;
+    font-size: 15.5px;
+    font-style: italic;
+    line-height: 1.7;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  ::-webkit-scrollbar { display: none; }
+
+  #indicador-offline {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: var(--preto-suave);
+    border: 1px solid var(--dourado-fraco);
+    color: var(--osso);
+    font-size: 11.5px;
+    padding: 9px 16px;
+    border-radius: 100px;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    white-space: nowrap;
+  }
+  #indicador-offline.visivel {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="constelacao"></canvas>
+<div id="indicador-offline"></div>
+
+<div id="app">
+
+  <!-- TELA 1 — ENTRADA -->
+  <div class="tela ativa" id="tela-entrada">
+    <div class="selo"></div>
+    <h1 class="titulo-marca">Ecossistema Digital<br>da Consciência</h1>
+    <p class="subtitulo-marca">um espaço para se reconhecer</p>
+    <button class="entrar-btn" onclick="irPara('tela-login')">Entrar</button>
+    <button class="link-criar-conta" onclick="irPara('tela-cadastro')">Criar minha conta</button>
+    <p class="entrada-rodape">J Vitor Fernandes</p>
+  </div>
+
+  <!-- TELA LOGIN -->
+  <div class="tela" id="tela-login">
+    <div class="cadastro-topo">
+      <button class="voltar-simples" onclick="irPara('tela-entrada')">‹ voltar</button>
+    </div>
+    <div class="cadastro-conteudo" style="display:flex; flex-direction:column; justify-content:center; flex:1;">
+      <h2 class="cadastro-titulo">Entrar</h2>
+      <p class="cadastro-subtitulo">Volte para o seu espaço.</p>
+
+      <form id="form-login" onsubmit="return validarLogin(event)">
+        <div class="campo-grupo">
+          <label class="campo-label" for="login-email">E-mail</label>
+          <input type="email" id="login-email" class="campo-input" placeholder="seu@email.com" autocomplete="email">
+        </div>
+
+        <div class="campo-grupo">
+          <label class="campo-label" for="login-senha">Senha</label>
+          <input type="password" id="login-senha" class="campo-input" placeholder="Sua senha" autocomplete="current-password">
+          <p class="campo-erro" id="erro-login">E-mail ou senha não conferem.</p>
+        </div>
+
+        <button type="submit" class="criar-conta-btn" id="btn-entrar-login">Entrar</button>
+      </form>
+
+      <p class="ja-tem-conta">Ainda não tem conta? <a onclick="irPara('tela-cadastro')">Criar conta</a></p>
+    </div>
+  </div>
+
+  <!-- TELA CADASTRO -->
+  <div class="tela" id="tela-cadastro">
+    <div class="cadastro-topo">
+      <button class="voltar-simples" onclick="irPara('tela-entrada')">‹ voltar</button>
+    </div>
+    <div class="cadastro-conteudo">
+      <h2 class="cadastro-titulo">Criar sua conta</h2>
+      <p class="cadastro-subtitulo">Só o essencial para guardar seu espaço com segurança.</p>
+
+      <form id="form-cadastro" onsubmit="return validarCadastro(event)">
+
+        <div class="campo-grupo">
+          <label class="campo-label" for="campo-nome">Nome completo</label>
+          <input type="text" id="campo-nome" class="campo-input" placeholder="Seu nome completo" autocomplete="name">
+        </div>
+
+        <div class="campo-grupo">
+          <label class="campo-label" for="campo-cpf">CPF</label>
+          <input type="text" id="campo-cpf" class="campo-input" placeholder="000.000.000-00" inputmode="numeric" maxlength="14" oninput="formatarCPF(this)">
+          <p class="campo-ajuda">Visível só para você, na seção Perfil. Ninguém mais vê seu CPF.</p>
+          <p class="campo-erro" id="erro-cpf">CPF precisa ter 11 números.</p>
+        </div>
+
+        <div class="campo-grupo">
+          <label class="campo-label" for="campo-email">E-mail</label>
+          <input type="email" id="campo-email" class="campo-input" placeholder="seu@email.com" autocomplete="email">
+          <p class="campo-erro" id="erro-email">Digite um e-mail válido.</p>
+        </div>
+
+        <div class="campo-grupo">
+          <label class="campo-label" for="campo-email-confirma">Confirmar e-mail</label>
+          <input type="email" id="campo-email-confirma" class="campo-input" placeholder="seu@email.com" autocomplete="email">
+          <p class="campo-erro" id="erro-email-confirma">Os e-mails não coincidem.</p>
+        </div>
+
+        <div class="campo-grupo">
+          <label class="campo-label" for="campo-senha">Senha</label>
+          <input type="password" id="campo-senha" class="campo-input" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+          <p class="campo-erro" id="erro-senha">A senha precisa ter ao menos 8 caracteres.</p>
+        </div>
+
+        <div class="campo-grupo">
+          <label class="campo-label" for="campo-senha-confirma">Confirmar senha</label>
+          <input type="password" id="campo-senha-confirma" class="campo-input" placeholder="Repita a senha" autocomplete="new-password">
+          <p class="campo-erro" id="erro-senha-confirma">As senhas não coincidem.</p>
+        </div>
+
+        <div class="aviso-privacidade">
+          <span>◐</span>
+          <span><strong>Privacidade:</strong> outras pessoas do Ecossistema veem apenas seu nome. CPF, e-mail e dados de conta ficam visíveis somente para você, na seção Perfil.</span>
+        </div>
+
+        <button type="submit" class="criar-conta-btn" id="btn-criar-conta">Criar conta</button>
+      </form>
+
+      <p class="ja-tem-conta">Já tem conta? <a onclick="irPara('tela-login')">Entrar</a></p>
+    </div>
+  </div>
+
+  <!-- TELA 2 — RECONHECIMENTO (perguntas) -->
+  <div class="tela" id="tela-reconhecimento">
+    <div class="reconhecimento-topo">
+      <button class="voltar-simples" onclick="irPara('tela-entrada')">‹ voltar</button>
+      <span class="marca-mini">reconhecimento</span>
+      <span style="width:50px"></span>
+    </div>
+    <div class="pergunta-palco" id="palco-pergunta">
+      <!-- injetado via JS -->
+    </div>
+  </div>
+
+  <!-- TELA 3 — TERRITÓRIO (hub) -->
+  <div class="tela" id="tela-territorio">
+    <div class="territorio-topo">
+      <div>
+        <h2 class="saudacao">Você chegou.<br><span>Fica à vontade.</span></h2>
+        <p class="data-hoje" id="data-hoje-texto"></p>
+      </div>
+      <div style="position:relative;">
+        <div class="avatar-circulo" onclick="alternarMenuPerfil()">V</div>
+        <div id="menu-perfil" class="menu-perfil">
+          <button onclick="irPara('tela-interior'); fecharMenuPerfil();">◐ Interior</button>
+          <button id="btn-menu-painel" onclick="irPara('tela-painel'); fecharMenuPerfil(); renderizarPainel();" style="display:none;">✎ Painel</button>
+          <button onclick="sairDaConta()">⏻ Sair</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="frase-dia">
+      <p id="frase-dia-citacao">"O Reino de Deus não vem com aparência visível... porque o Reino de Deus está entre vós."</p>
+      <p class="fonte" id="frase-dia-fonte">LUCAS 17:20-21</p>
+    </div>
+
+    <p class="secao-label">Caminhos</p>
+    <div class="caminhos-grid">
+      <div class="caminho-card" onclick="irPara('tela-reconhecimento'); iniciarPerguntas();">
+        <div class="caminho-icone" style="background:rgba(184,147,90,0.12)">🕯️</div>
+        <div class="caminho-textos">
+          <h3>Reconhecimento</h3>
+          <p>Perguntas para se ver com mais clareza</p>
+        </div>
+      </div>
+      <div class="caminho-card" onclick="irPara('tela-criacao')">
+        <div class="caminho-icone" style="background:rgba(107,50,38,0.15)">✎</div>
+        <div class="caminho-textos">
+          <h3>Sua criação</h3>
+          <p>O espaço em branco é seu</p>
+        </div>
+      </div>
+      <div class="caminho-card" onclick="irPara('tela-comunidade')">
+        <div class="caminho-icone" style="background:rgba(184,147,90,0.12)">◐</div>
+        <div class="caminho-textos">
+          <h3>Comunidade</h3>
+          <p>O que outros escolheram partilhar</p>
+        </div>
+      </div>
+      <div class="caminho-card" onclick="irPara('tela-livro')">
+        <div class="caminho-icone" style="background:rgba(237,234,227,0.05)">📖</div>
+        <div class="caminho-textos">
+          <h3>Além do Algoritmo</h3>
+          <p>Capítulo 3 — A identidade de quem foi traído</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA 4 — CRIAÇÃO PESSOAL -->
+  <div class="tela" id="tela-criacao">
+    <div class="criacao-topo">
+      <h2 class="criacao-titulo" id="titulo-criacao">Sua criação</h2>
+      <button class="nova-anotacao-btn" id="btn-novo-item" onclick="abrirEditor()">+</button>
+    </div>
+
+    <div class="criacao-abas">
+      <button class="criacao-aba ativa" data-aba="anotacoes" onclick="trocarAbaCriacao('anotacoes')"><span id="rotulo-anotacoes">Anotações</span></button>
+      <button class="criacao-aba" data-aba="agenda" onclick="trocarAbaCriacao('agenda')"><span id="rotulo-agenda">Agenda</span></button>
+    </div>
+
+    <div id="painel-anotacoes" class="painel-aba ativo">
+      <div id="lista-anotacoes">
+        <div class="anotacao-vazia">
+          <p>Nada aqui ainda.<br>Isso não é vazio — é espaço.</p>
+          <button class="entrar-btn" onclick="abrirEditor()" style="animation:none;opacity:1;">Escrever algo</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="painel-agenda" class="painel-aba">
+      <div id="lista-agenda">
+        <div class="anotacao-vazia">
+          <p>Nenhuma intenção ou compromisso ainda.<br>O tempo também é espaço.</p>
+          <button class="entrar-btn" onclick="abrirEditorAgenda()" style="animation:none;opacity:1;">Adicionar algo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA 5 — COMUNIDADE -->
+  <div class="tela" id="tela-comunidade">
+    <div class="comunidade-topo">
+      <h2 id="titulo-comunidade">Comunidade</h2>
+      <p>Ninguém aqui está sendo avaliado. Isso é o que algumas pessoas escolheram tornar visível.</p>
+    </div>
+    <div class="aviso-suave">
+      Nada do que você escreve em "Sua criação" aparece aqui, a menos que você escolha partilhar.
+    </div>
+
+    <div id="partilhas-reais"></div>
+  </div>
+
+  <!-- TELA LIVRO — experiência imersiva ao tocar no card do livro -->
+  <div class="tela" id="tela-livro">
+    <div class="livro-pagina">
+      <div class="livro-topo-fixo">
+        <button class="voltar-simples voltar-clara" onclick="irPara('tela-territorio')">‹ voltar</button>
+      </div>
+
+      <div class="livro-citacoes-fundo">
+        <p>Você foi treinado para não confiar em si mesmo.</p>
+        <p>O sistema ainda governa corpos. Mas perdeu o controle sobre almas que decidiram ver.</p>
+        <p>Não foi a pobreza que te feriu. Foi o sistema.</p>
+        <p>Cada segundo de dúvida foi implantado.</p>
+        <p>A centelha que ainda arde dentro de você.</p>
+      </div>
+
+      <div class="livro-citacao-foco">
+        <span class="livro-aspas">"</span>
+        <p>Você não foi derrotado — você foi distraído.</p>
+      </div>
+
+      <div class="livro-info">
+        <h3 class="livro-titulo">Além do Algoritmo</h3>
+        <p class="livro-subtitulo">Reino: O Poder que Vive em Ti</p>
+        <p class="livro-apresentacao">
+          Um chamado para quem sente que nasceu para mais do que sobreviver.
+          Este livro atravessa o condicionamento silencioso do sistema e aponta
+          o caminho de volta à consciência, à presença e ao poder que sempre
+          esteve dentro de você.
+        </p>
+        <p class="livro-autor-nota">Escrito por J Vitor Fernandes.</p>
+
+        <button class="entrar-btn" style="animation:none; opacity:1; margin-top:8px;" onclick="irPara('tela-territorio')">Continuar lendo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA INTERIOR (dados pessoais, privados) -->
+  <div class="tela" id="tela-interior">
+    <div class="cadastro-topo">
+      <button class="voltar-simples" onclick="irPara('tela-territorio')">‹ voltar</button>
+    </div>
+    <div class="cadastro-conteudo">
+      <h2 class="cadastro-titulo">Interior</h2>
+      <p class="cadastro-subtitulo">Só você vê o que está aqui.</p>
+
+      <div class="campo-grupo">
+        <label class="campo-label">Nome completo</label>
+        <p class="interior-valor" id="interior-nome">—</p>
+      </div>
+      <div class="campo-grupo">
+        <label class="campo-label">CPF</label>
+        <p class="interior-valor" id="interior-cpf">—</p>
+      </div>
+      <div class="campo-grupo">
+        <label class="campo-label">E-mail</label>
+        <p class="interior-valor" id="interior-email">—</p>
+      </div>
+
+      <div class="aviso-privacidade">
+        <span>◐</span>
+        <span>Estes dados nunca aparecem para outras pessoas da comunidade — apenas seu nome é visível externamente.</span>
+      </div>
+
+      <button class="criar-conta-btn" onclick="sairDaConta()" style="background:transparent; border:1px solid var(--linha); color:var(--osso);">Sair da conta</button>
+    </div>
+  </div>
+
+  <!-- TELA PAINEL — edição do Ecossistema, acesso restrito ao fundador -->
+  <div class="tela" id="tela-painel">
+    <div class="cadastro-topo">
+      <button class="voltar-simples" onclick="irPara('tela-territorio')">‹ voltar</button>
+    </div>
+    <div class="cadastro-conteudo">
+      <h2 class="cadastro-titulo">Painel</h2>
+      <p class="cadastro-subtitulo">O que você mudar aqui, todo mundo vê no Ecossistema.</p>
+
+      <p class="secao-label" style="margin-top:8px;">Frase do dia</p>
+      <div class="campo-grupo">
+        <label class="campo-label">Citação</label>
+        <textarea id="painel-frase-citacao" class="campo-input" style="min-height:70px; font-family:'Fraunces',serif; resize:vertical;"></textarea>
+      </div>
+      <div class="campo-grupo">
+        <label class="campo-label">Fonte (ex: LUCAS 17:20-21)</label>
+        <input type="text" id="painel-frase-fonte" class="campo-input">
+      </div>
+
+      <p class="secao-label">Nomes das seções</p>
+      <div class="campo-grupo">
+        <label class="campo-label">Território</label>
+        <input type="text" id="painel-nome-territorio" class="campo-input">
+      </div>
+      <div class="campo-grupo">
+        <label class="campo-label">Criação</label>
+        <input type="text" id="painel-nome-criacao" class="campo-input">
+      </div>
+      <div class="campo-grupo">
+        <label class="campo-label">Comunidade</label>
+        <input type="text" id="painel-nome-comunidade" class="campo-input">
+      </div>
+      <div class="campo-grupo">
+        <label class="campo-label">Agenda</label>
+        <input type="text" id="painel-nome-agenda" class="campo-input">
+      </div>
+      <div class="campo-grupo">
+        <label class="campo-label">Anotações</label>
+        <input type="text" id="painel-nome-anotacoes" class="campo-input">
+      </div>
+
+      <button class="criar-conta-btn" onclick="salvarPainel()">Salvar alterações</button>
+
+      <div class="aviso-privacidade" style="margin-top:20px;">
+        <span>◐</span>
+        <span>Área restrita ao fundador. Suas mudanças ficam salvas neste aparelho por enquanto — quando o Ecossistema tiver um servidor central, elas se tornam visíveis para todos automaticamente.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV INFERIOR -->
+  <div id="nav-inferior">
+    <button class="nav-item ativo" data-tela="tela-territorio" onclick="irPara('tela-territorio')">
+      <span class="nav-icone">◐</span>Território
+    </button>
+    <button class="nav-item" data-tela="tela-criacao" onclick="irPara('tela-criacao')">
+      <span class="nav-icone">✎</span>Criação
+    </button>
+    <button class="nav-item" data-tela="tela-comunidade" onclick="irPara('tela-comunidade')">
+      <span class="nav-icone">◈</span>Comunidade
+    </button>
+  </div>
+
+</div>
+
+<!-- EDITOR DE ANOTAÇÃO -->
+<div id="editor-anotacao">
+  <div class="editor-topo">
+    <button class="editor-fechar" onclick="fecharEditor()">✕</button>
+    <button class="editor-salvar" onclick="salvarAnotacao()">Guardar</button>
+  </div>
+  <textarea id="texto-anotacao" placeholder="O que está vivo em você agora?"></textarea>
+  <div class="editor-opcao-comunidade">
+    <div class="editor-opcao-comunidade-texto">
+      <h4>Partilhar com a comunidade</h4>
+      <p>Fica só seu, a menos que você ligue isso</p>
+    </div>
+    <div class="toggle" id="toggle-partilhar" onclick="this.classList.toggle('ligado')"></div>
+  </div>
+</div>
+
+<div id="editor-agenda">
+  <div class="editor-topo">
+    <button class="editor-fechar" onclick="fecharEditorAgenda()">✕</button>
+    <button class="editor-salvar" onclick="salvarAgenda()">Guardar</button>
+  </div>
+
+  <div class="agenda-tipo-seletor">
+    <button class="agenda-tipo-btn ativo" id="btn-tipo-intencao" onclick="selecionarTipoAgenda('intencao')">◐ Intenção</button>
+    <button class="agenda-tipo-btn" id="btn-tipo-compromisso" onclick="selecionarTipoAgenda('compromisso')">◈ Compromisso</button>
+  </div>
+
+  <textarea id="texto-agenda" placeholder="O que você pretende para este momento?"></textarea>
+
+  <div id="campos-data-hora" class="campos-data-hora" style="display:none;">
+    <div class="campo-grupo" style="flex:1;">
+      <label class="campo-label">Data</label>
+      <input type="date" id="agenda-data" class="campo-input">
+    </div>
+    <div class="campo-grupo" style="flex:1;">
+      <label class="campo-label">Hora</label>
+      <input type="time" id="agenda-hora" class="campo-input">
+    </div>
+  </div>
+</div>
+
+<!-- MENU DE CONTEXTO — Editar / Apagar / Enviar (usado por Anotações e Agenda) -->
+<div id="overlay-menu-item" onclick="if(event.target===this) fecharMenuItem()">
+  <div class="menu-item-painel">
+    <div class="menu-item-alca"></div>
+    <button class="menu-item-btn" onclick="editarItemAtual()">✎ Editar</button>
+    <button class="menu-item-btn" id="btn-enviar-comunidade" onclick="alternarEnvioComunidade()">◈ Enviar à comunidade</button>
+    <button class="menu-item-btn perigo" onclick="apagarItemAtual()">✕ Apagar</button>
+  </div>
+</div>
+
+<div id="overlay-menu-post" onclick="if(event.target===this) fecharMenuPost()">
+  <div class="menu-item-painel">
+    <div class="menu-item-alca"></div>
+    <button class="menu-item-btn" onclick="arquivarPostAtual()">◐ Arquivar</button>
+    <button class="menu-item-btn perigo" onclick="removerPostAtual()">✕ Remover</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SUPABASE — conexão e persistência real
+// ============================================================
+const supabaseUrl = 'https://cawvxladfbkabvvtouag.supabase.co';
+const supabaseKey = 'sb_publishable_G0ky94FqYoX__lDz22mclQ_ar-TAYHT';
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// Estrutura esperada no banco (rode isto uma vez no SQL Editor do Supabase):
+//
+// create table perfis (
+//   id uuid primary key references auth.users(id) on delete cascade,
+//   nome text,
+//   cpf text,
+//   email text,
+//   criado_em timestamptz default now()
+// );
+// alter table perfis enable row level security;
+// create policy "cada pessoa vê e edita só o próprio perfil"
+//   on perfis for all using (auth.uid() = id) with check (auth.uid() = id);
+//
+// create table reflexoes (
+//   id uuid primary key default gen_random_uuid(),
+//   user_id uuid references auth.users(id) on delete cascade,
+//   tipo text not null,          -- 'anotacao' ou 'agenda'
+//   conteudo jsonb not null,
+//   partilhada boolean default false,
+//   criado_em timestamptz default now()
+// );
+// alter table reflexoes enable row level security;
+// create policy "cada pessoa vê e edita só as próprias reflexões"
+//   on reflexoes for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+// create policy "todo mundo pode ler o que foi partilhado"
+//   on reflexoes for select using (partilhada = true);
+
+// Busca as anotações e itens de agenda salvos no servidor e repõe nos
+// arrays locais, para a pessoa continuar de onde parou em qualquer aparelho.
+async function carregarDadosDoServidor() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+
+  const { data, error } = await supabaseClient
+    .from('reflexoes')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('criado_em', { ascending: true });
+
+  if (error) {
+    console.error('Erro ao carregar dados do servidor:', error);
+    return;
+  }
+
+  anotacoes = [];
+  agendaItens = [];
+
+  (data || []).forEach(linha => {
+    if (linha.tipo === 'anotacao') {
+      anotacoes.push({
+        id: proximoIdAnotacao++,
+        texto: linha.conteudo.texto,
+        data: linha.conteudo.data || formatarDataAgenda(linha.criado_em.slice(0, 10)),
+        partilhada: linha.partilhada
+      });
+    } else if (linha.tipo === 'agenda') {
+      agendaItens.push({
+        id: proximoIdAgenda++,
+        texto: linha.conteudo.texto,
+        tipo: linha.conteudo.tipo,
+        data: linha.conteudo.data || '',
+        hora: linha.conteudo.hora || '',
+        partilhada: linha.partilhada
+      });
+    }
+  });
+
+  renderizarAnotacoes();
+  renderizarAgenda();
+  renderizarComunidade();
+}
+
+// ============================================================
+// NAVEGAÇÃO ENTRE TELAS
+// ============================================================
+function irPara(idTela) {
+  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+  document.getElementById(idTela).classList.add('ativa');
+
+  const navInferior = document.getElementById('nav-inferior');
+  const telasComNav = ['tela-territorio', 'tela-criacao', 'tela-comunidade'];
+
+  if (telasComNav.includes(idTela)) {
+    navInferior.classList.add('visivel');
+    document.querySelectorAll('.nav-item').forEach(n => {
+      n.classList.toggle('ativo', n.dataset.tela === idTela);
+    });
+  } else {
+    navInferior.classList.remove('visivel');
+  }
+}
+
+// Data de hoje formatada
+const dataHoje = new Date();
+const opcoesData = { weekday: 'long', day: 'numeric', month: 'long' };
+document.getElementById('data-hoje-texto').textContent =
+  dataHoje.toLocaleDateString('pt-BR', opcoesData);
+
+// ============================================================
+// MENU DE PERFIL (avatar) — Interior / Sair
+// ============================================================
+function alternarMenuPerfil() {
+  document.getElementById('menu-perfil').classList.toggle('aberto');
+}
+function fecharMenuPerfil() {
+  document.getElementById('menu-perfil').classList.remove('aberto');
+}
+// Fecha o menu se a pessoa tocar fora dele
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('menu-perfil');
+  const avatar = document.querySelector('.avatar-circulo');
+  if (menu && menu.classList.contains('aberto')) {
+    if (!menu.contains(e.target) && e.target !== avatar) {
+      menu.classList.remove('aberto');
+    }
+  }
+});
+
+async function sairDaConta() {
+  fecharMenuPerfil();
+  await supabaseClient.auth.signOut();
+  dadosConta = { nome: '', cpf: '', email: '' };
+  anotacoes = [];
+  agendaItens = [];
+  localStorage.removeItem('ecossistema_sessao'); // encerra a sessão salva
+  // Limpa os campos de login/cadastro para a próxima pessoa
+  const camposParaLimpar = ['login-email', 'login-senha', 'campo-nome', 'campo-cpf',
+                             'campo-email', 'campo-email-confirma', 'campo-senha', 'campo-senha-confirma'];
+  camposParaLimpar.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  irPara('tela-entrada');
+}
+
+// ============================================================
+// DADOS DA CONTA (sessão persistida no aparelho — funciona online e offline)
+// ============================================================
+let dadosConta = { nome: '', cpf: '', email: '' };
+
+function salvarSessao() {
+  try {
+    localStorage.setItem('ecossistema_sessao', JSON.stringify(dadosConta));
+  } catch (e) {
+    // Armazenamento indisponível (ex: modo privado) — a sessão simplesmente não persiste
+  }
+}
+
+function carregarSessaoSalva() {
+  try {
+    const salvo = localStorage.getItem('ecossistema_sessao');
+    if (salvo) {
+      dadosConta = JSON.parse(salvo);
+      return true;
+    }
+  } catch (e) {
+    // Dado corrompido ou armazenamento indisponível — trata como se não houvesse sessão
+  }
+  return false;
+}
+
+function preencherInterior() {
+  document.getElementById('interior-nome').textContent = dadosConta.nome || '—';
+  document.getElementById('interior-cpf').textContent = dadosConta.cpf || '—';
+  document.getElementById('interior-email').textContent = dadosConta.email || '—';
+  verificarAcessoPainel();
+}
+
+// ============================================================
+// PAINEL — edição do Ecossistema (acesso restrito ao fundador)
+// ============================================================
+const EMAIL_FUNDADOR = 'sociedadedainternet@gmail.com';
+
+function verificarAcessoPainel() {
+  const btnPainel = document.getElementById('btn-menu-painel');
+  if (!btnPainel) return;
+  const ehFundador = dadosConta.email && dadosConta.email.toLowerCase() === EMAIL_FUNDADOR;
+  btnPainel.style.display = ehFundador ? 'block' : 'none';
+}
+
+// Valores padrão — usados se o fundador ainda não personalizou nada
+const configuracoesPadrao = {
+  fraseCitacao: '"O Reino de Deus não vem com aparência visível... porque o Reino de Deus está entre vós."',
+  fraseFonte: 'LUCAS 17:20-21',
+  nomeTerritorio: 'Território',
+  nomeCriacao: 'Sua criação',
+  nomeComunidade: 'Comunidade',
+  nomeAgenda: 'Agenda',
+  nomeAnotacoes: 'Anotações'
+};
+
+function carregarConfiguracoes() {
+  try {
+    const salvo = localStorage.getItem('ecossistema_config');
+    if (salvo) return { ...configuracoesPadrao, ...JSON.parse(salvo) };
+  } catch (e) {
+    // dado corrompido ou indisponível — usa padrão
+  }
+  return { ...configuracoesPadrao };
+}
+
+function aplicarConfiguracoes() {
+  const cfg = carregarConfiguracoes();
+
+  const elFraseCitacao = document.getElementById('frase-dia-citacao');
+  const elFraseFonte = document.getElementById('frase-dia-fonte');
+  if (elFraseCitacao) elFraseCitacao.textContent = cfg.fraseCitacao;
+  if (elFraseFonte) elFraseFonte.textContent = cfg.fraseFonte;
+
+  const mapaTitulos = {
+    'titulo-criacao': cfg.nomeCriacao,
+    'titulo-comunidade': cfg.nomeComunidade,
+    'rotulo-anotacoes': cfg.nomeAnotacoes,
+    'rotulo-agenda': cfg.nomeAgenda
+  };
+  Object.entries(mapaTitulos).forEach(([id, valor]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = valor;
+  });
+
+  // "Território" aparece em vários lugares (saudação, nav inferior) —
+  // por ora aplicamos só ao rótulo do menu de navegação, que é o rótulo direto da seção.
+  const navTerritorio = document.querySelector('.nav-item[data-tela="tela-territorio"]');
+  if (navTerritorio) {
+    const textoNode = Array.from(navTerritorio.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+    if (textoNode) textoNode.textContent = cfg.nomeTerritorio;
+  }
+}
+
+function renderizarPainel() {
+  const cfg = carregarConfiguracoes();
+  document.getElementById('painel-frase-citacao').value = cfg.fraseCitacao;
+  document.getElementById('painel-frase-fonte').value = cfg.fraseFonte;
+  document.getElementById('painel-nome-territorio').value = cfg.nomeTerritorio;
+  document.getElementById('painel-nome-criacao').value = cfg.nomeCriacao;
+  document.getElementById('painel-nome-comunidade').value = cfg.nomeComunidade;
+  document.getElementById('painel-nome-agenda').value = cfg.nomeAgenda;
+  document.getElementById('painel-nome-anotacoes').value = cfg.nomeAnotacoes;
+}
+
+function salvarPainel() {
+  const novaConfig = {
+    fraseCitacao: document.getElementById('painel-frase-citacao').value.trim(),
+    fraseFonte: document.getElementById('painel-frase-fonte').value.trim(),
+    nomeTerritorio: document.getElementById('painel-nome-territorio').value.trim(),
+    nomeCriacao: document.getElementById('painel-nome-criacao').value.trim(),
+    nomeComunidade: document.getElementById('painel-nome-comunidade').value.trim(),
+    nomeAgenda: document.getElementById('painel-nome-agenda').value.trim(),
+    nomeAnotacoes: document.getElementById('painel-nome-anotacoes').value.trim()
+  };
+
+  try {
+    localStorage.setItem('ecossistema_config', JSON.stringify(novaConfig));
+  } catch (e) {
+    alert('Não foi possível salvar as alterações neste aparelho.');
+    return;
+  }
+
+  aplicarConfiguracoes();
+  mostrarConfirmacao('Alterações salvas');
+}
+
+// ============================================================
+// SINCRONIZAÇÃO OFFLINE — fila de envio
+// ============================================================
+// Tudo que a pessoa cria offline (anotações, respostas) entra nesta fila.
+// Quando a conexão volta, a fila é "enviada" automaticamente.
+let filaSincronizacao = [];
+
+function estaOnline() {
+  return navigator.onLine;
+}
+
+function adicionarNaFila(tipo, conteudo) {
+  filaSincronizacao.push({
+    tipo,
+    conteudo,
+    criadoEm: new Date().toISOString(),
+    sincronizado: false
+  });
+  atualizarIndicadorOffline();
+}
+
+async function sincronizarFila() {
+  if (!estaOnline() || filaSincronizacao.length === 0) return;
+
+  const pendentes = filaSincronizacao.filter(item => !item.sincronizado);
+  if (pendentes.length === 0) return;
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return; // sem conta autenticada, não há onde salvar no servidor
+
+  let enviados = 0;
+  for (const item of pendentes) {
+    const { partilhada, ...conteudo } = item.conteudo;
+    const { error } = await supabaseClient.from('reflexoes').insert({
+      user_id: session.user.id,
+      tipo: item.tipo,
+      conteudo,
+      partilhada: !!partilhada
+    });
+
+    if (!error) {
+      item.sincronizado = true;
+      enviados++;
+    }
+    // se der erro (ex: perdeu a conexão no meio), o item continua pendente
+    // e uma próxima chamada de sincronizarFila() tenta de novo.
+  }
+
+  atualizarIndicadorOffline();
+  if (enviados > 0) mostrarAvisoSincronizado(enviados);
+}
+
+function atualizarIndicadorOffline() {
+  const indicador = document.getElementById('indicador-offline');
+  if (!indicador) return;
+  const pendentes = filaSincronizacao.filter(i => !i.sincronizado).length;
+
+  if (!estaOnline()) {
+    indicador.textContent = pendentes > 0
+      ? `◐ Offline — ${pendentes} item(ns) aguardando envio`
+      : '◐ Offline — tudo salvo neste aparelho';
+    indicador.classList.add('visivel');
+  } else if (pendentes > 0) {
+    indicador.textContent = `◐ Enviando ${pendentes} item(ns)...`;
+    indicador.classList.add('visivel');
+    sincronizarFila();
+  } else {
+    indicador.classList.remove('visivel');
+  }
+}
+
+function mostrarAvisoSincronizado(quantidade) {
+  const indicador = document.getElementById('indicador-offline');
+  if (!indicador) return;
+  indicador.textContent = `✓ ${quantidade} item(ns) enviado(s)`;
+  indicador.classList.add('visivel');
+  setTimeout(() => indicador.classList.remove('visivel'), 3000);
+}
+
+window.addEventListener('online', () => {
+  atualizarIndicadorOffline();
+  sincronizarFila();
+});
+window.addEventListener('offline', atualizarIndicadorOffline);
+
+// Verifica o estado ao carregar
+document.addEventListener('DOMContentLoaded', async () => {
+  // Primeiro: se já existir uma sessão salva no aparelho (com ou sem
+  // internet), entra direto no Território sem passar por login/cadastro.
+  // Isso dá uma entrada instantânea mesmo offline.
+  if (carregarSessaoSalva()) {
+    preencherInterior();
+    irPara('tela-territorio');
+  }
+
+  aplicarConfiguracoes(); // aplica textos personalizados pelo fundador, se houver
+  atualizarIndicadorOffline();
+  renderizarComunidade();
+
+  // Depois, se estiver online, confirma com o servidor se a conta ainda
+  // é válida e traz os dados mais recentes (podem vir de outro aparelho).
+  if (estaOnline()) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      const { data: perfil } = await supabaseClient
+        .from('perfis').select('*').eq('id', session.user.id).single();
+      dadosConta.email = session.user.email;
+      dadosConta.nome = perfil?.nome || dadosConta.nome;
+      dadosConta.cpf = perfil?.cpf || dadosConta.cpf;
+      preencherInterior();
+      salvarSessao();
+      await carregarDadosDoServidor();
+      if (!document.getElementById('tela-territorio').classList.contains('ativa')) {
+        irPara('tela-territorio');
+      }
+    } else if (dadosConta.email) {
+      // Havia cache local, mas o servidor não reconhece mais essa sessão
+      // (ex: expirou) — mantém a pessoa no app com os dados salvos no
+      // aparelho; ela só perde o login real na próxima ação de sync.
+    }
+  }
+});
+
+// ============================================================
+// LOGIN
+// ============================================================
+async function validarLogin(evento) {
+  evento.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const erro = document.getElementById('erro-login');
+  const campoEmail = document.getElementById('login-email');
+  const campoSenha = document.getElementById('login-senha');
+  const botao = evento.target.querySelector('button[type="submit"], .entrar-btn');
+
+  if (email === '' || senha === '') {
+    campoEmail.classList.add('com-erro');
+    campoSenha.classList.add('com-erro');
+    erro.textContent = 'Preencha e-mail e senha.';
+    erro.classList.add('visivel');
+    return false;
+  }
+
+  campoEmail.classList.remove('com-erro');
+  campoSenha.classList.remove('com-erro');
+  erro.classList.remove('visivel');
+
+  try {
+    if (botao) botao.disabled = true;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+
+    if (error) {
+      campoEmail.classList.add('com-erro');
+      campoSenha.classList.add('com-erro');
+      erro.textContent = 'E-mail ou senha incorretos.';
+      erro.classList.add('visivel');
+      return false;
+    }
+
+    // Busca o perfil (nome, cpf) associado a essa conta
+    const { data: perfil } = await supabaseClient
+      .from('perfis')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    dadosConta.email = email;
+    dadosConta.nome = perfil?.nome || '';
+    dadosConta.cpf = perfil?.cpf || '';
+
+    preencherInterior();
+    salvarSessao(); // cache local — permite abrir offline depois
+    await carregarDadosDoServidor();
+
+    irPara('tela-territorio');
+    return false;
+  } catch (e) {
+    erro.textContent = 'Não foi possível entrar agora. Verifique sua conexão.';
+    erro.classList.add('visivel');
+    return false;
+  } finally {
+    if (botao) botao.disabled = false;
+  }
+}
+
+// ============================================================
+// CADASTRO — validação
+// ============================================================
+function formatarCPF(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length > 9) {
+    v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+  } else if (v.length > 6) {
+    v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+  } else if (v.length > 3) {
+    v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+  }
+  input.value = v;
+}
+
+function mostrarErro(idCampo, idErro) {
+  document.getElementById(idCampo).classList.add('com-erro');
+  document.getElementById(idErro).classList.add('visivel');
+}
+function limparErro(idCampo, idErro) {
+  document.getElementById(idCampo).classList.remove('com-erro');
+  document.getElementById(idErro).classList.remove('visivel');
+}
+
+async function validarCadastro(evento) {
+  try {
+    evento.preventDefault();
+    let valido = true;
+
+    // CPF — 11 dígitos
+    const cpf = document.getElementById('campo-cpf').value.replace(/\D/g, '');
+    if (cpf.length !== 11) {
+      mostrarErro('campo-cpf', 'erro-cpf');
+      valido = false;
+    } else {
+      limparErro('campo-cpf', 'erro-cpf');
+    }
+
+    // E-mail válido
+    const email = document.getElementById('campo-email').value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      mostrarErro('campo-email', 'erro-email');
+      valido = false;
+    } else {
+      limparErro('campo-email', 'erro-email');
+    }
+
+    // E-mails coincidem
+    const emailConfirma = document.getElementById('campo-email-confirma').value.trim();
+    if (email !== emailConfirma || emailConfirma === '') {
+      mostrarErro('campo-email-confirma', 'erro-email-confirma');
+      valido = false;
+    } else {
+      limparErro('campo-email-confirma', 'erro-email-confirma');
+    }
+
+    // Senha — mínimo 8 caracteres
+    const senha = document.getElementById('campo-senha').value;
+    if (senha.length < 8) {
+      mostrarErro('campo-senha', 'erro-senha');
+      valido = false;
+    } else {
+      limparErro('campo-senha', 'erro-senha');
+    }
+
+    // Senhas coincidem
+    const senhaConfirma = document.getElementById('campo-senha-confirma').value;
+    if (senha !== senhaConfirma || senhaConfirma === '') {
+      mostrarErro('campo-senha-confirma', 'erro-senha-confirma');
+      valido = false;
+    } else {
+      limparErro('campo-senha-confirma', 'erro-senha-confirma');
+    }
+
+    if (valido) {
+      const nome = document.getElementById('campo-nome').value.trim();
+      const cpfLimpo = cpf;
+      const botao = document.getElementById('btn-criar-conta');
+      if (botao) botao.disabled = true;
+
+      const { data, error } = await supabaseClient.auth.signUp({ email, password: senha });
+
+      if (error) {
+        if (botao) botao.disabled = false;
+        mostrarErro('campo-email', 'erro-email');
+        document.getElementById('erro-email').textContent = error.message.includes('already registered')
+          ? 'Este e-mail já tem uma conta.'
+          : 'Não foi possível criar a conta agora.';
+        document.getElementById('erro-email').classList.add('visivel');
+        return false;
+      }
+
+      // Salva o perfil (nome, cpf) vinculado ao usuário recém-criado
+      if (data.user) {
+        await supabaseClient.from('perfis').upsert({
+          id: data.user.id,
+          nome,
+          cpf: cpfLimpo,
+          email
+        });
+      }
+
+      dadosConta.nome = nome;
+      dadosConta.cpf = cpfLimpo;
+      dadosConta.email = email;
+      preencherInterior();
+      salvarSessao(); // cache local — permite abrir offline depois
+
+      if (botao) botao.disabled = false;
+
+      // A pessoa entra "jogando normalmente", como quem já tem conta —
+      // não fica presa na sessão de perguntas.
+      irPara('tela-territorio');
+    } else {
+      // Rola até o primeiro campo com erro, para garantir visibilidade
+      const primeiroErro = document.querySelector('.campo-input.com-erro');
+      if (primeiroErro) primeiroErro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    return false;
+  } catch (e) {
+    alert('Algo travou ao validar o formulário: ' + e.message);
+    return false;
+  }
+}
+
+// ============================================================
+// SESSÃO DE PERGUNTAS — RECONHECIMENTO
+// ============================================================
+const perguntas = [
+  {
+    texto: "Quando você foi treinado a duvidar de si mesmo pela primeira vez?",
+    tipo: "opcoes",
+    opcoes: ["Na escola", "Em casa", "Não sei dizer quando", "Ainda estou percebendo isso"]
+  },
+  {
+    texto: "O que você tem chamado de 'realista' que talvez seja só medo repetido?",
+    tipo: "livre",
+    placeholder: "Escreva o que vier..."
+  },
+  {
+    texto: "Quando você sente mais presença — visão, som, silêncio ou toque?",
+    tipo: "opcoes",
+    opcoes: ["Visão — quando realmente vejo algo", "Som — no silêncio entre os ruídos", "Toque — no contato com o corpo", "Ainda não sei distinguir"]
+  },
+  {
+    texto: "Se ninguém estivesse observando, o que você criaria hoje?",
+    tipo: "livre",
+    placeholder: "Sem se preocupar se faz sentido..."
+  },
+  {
+    texto: "Você tem buscado direção fora de si com mais frequência ultimamente?",
+    tipo: "opcoes",
+    opcoes: ["Sim, bastante", "Às vezes", "Estou tentando parar", "Não percebi isso antes de agora"]
+  }
+];
+
+let perguntaAtual = 0;
+let respostas = [];
+
+function iniciarPerguntas() {
+  perguntaAtual = 0;
+  respostas = [];
+  renderizarPergunta();
+}
+
+function renderizarPergunta() {
+  const palco = document.getElementById('palco-pergunta');
+  const p = perguntas[perguntaAtual];
+
+  let html = `
+    <div class="pergunta-numero">reconhecimento · ${perguntaAtual + 1} de ${perguntas.length}</div>
+    <div class="pergunta-texto">${p.texto}</div>
+  `;
+
+  if (p.tipo === 'opcoes') {
+    html += `<div class="opcoes-resposta">`;
+    p.opcoes.forEach((opcao, i) => {
+      html += `<button class="opcao" onclick="escolherOpcao(${i}, this)">${opcao}</button>`;
+    });
+    html += `</div>`;
+    html += `<button class="continuar-btn" id="btn-continuar" onclick="proximaPergunta()">Continuar</button>`;
+  } else {
+    html += `
+      <input type="text" class="campo-livre" id="campo-livre-input"
+             placeholder="${p.placeholder}"
+             oninput="verificarCampoLivre(this)">
+      <button class="continuar-btn" id="btn-continuar" onclick="proximaPergunta()">Continuar</button>
+    `;
+  }
+
+  html += `<button class="pular-link" onclick="proximaPergunta(true)">deixar em branco por agora</button>`;
+
+  palco.innerHTML = html;
+  palco.style.opacity = '0';
+  requestAnimationFrame(() => {
+    palco.style.transition = 'opacity 0.6s ease';
+    palco.style.opacity = '1';
+  });
+}
+
+function escolherOpcao(indice, elemento) {
+  document.querySelectorAll('.opcao').forEach(o => o.classList.remove('escolhida'));
+  elemento.classList.add('escolhida');
+  respostas[perguntaAtual] = elemento.textContent;
+  document.getElementById('btn-continuar').classList.add('pronto');
+  adicionarPontoConstelacao();
+}
+
+function verificarCampoLivre(input) {
+  const btn = document.getElementById('btn-continuar');
+  if (input.value.trim().length > 2) {
+    btn.classList.add('pronto');
+    respostas[perguntaAtual] = input.value;
+  } else {
+    btn.classList.remove('pronto');
+  }
+}
+
+function proximaPergunta(pulou = false) {
+  if (pulou) adicionarPontoConstelacao(true);
+
+  perguntaAtual++;
+  if (perguntaAtual < perguntas.length) {
+    renderizarPergunta();
+  } else {
+    // Fim da sessão — vai para o território
+    irPara('tela-territorio');
+  }
+}
+
+// ============================================================
+// EDITOR DE ANOTAÇÃO
+// ============================================================
+function abrirEditor() {
+  document.getElementById('editor-anotacao').classList.add('aberto');
+  setTimeout(() => document.getElementById('texto-anotacao').focus(), 400);
+}
+
+function fecharEditor() {
+  document.getElementById('editor-anotacao').classList.remove('aberto');
+}
+
+let anotacoes = [];
+let proximoIdAnotacao = 1;
+let editandoAnotacaoId = null; // null = criando nova; caso contrário, editando esta
+
+function salvarAnotacao() {
+  const texto = document.getElementById('texto-anotacao').value.trim();
+  if (texto.length === 0) {
+    fecharEditor();
+    return;
+  }
+
+  const partilhada = document.getElementById('toggle-partilhar').classList.contains('ligado');
+
+  if (editandoAnotacaoId !== null) {
+    // Modo edição — atualiza o item existente, mantendo sua data original
+    const item = anotacoes.find(a => a.id === editandoAnotacaoId);
+    if (item) {
+      item.texto = texto;
+      item.partilhada = partilhada;
+    }
+    editandoAnotacaoId = null;
+  } else {
+    // Modo criação — novo item
+    const agora = new Date();
+    const dataFormatada = agora.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+    anotacoes.unshift({ id: proximoIdAnotacao++, texto, partilhada, data: dataFormatada });
+  }
+
+  renderizarAnotacoes();
+
+  // Sempre entra na fila — se estiver online, sincroniza na hora;
+  // se estiver offline, fica guardada no aparelho até a conexão voltar.
+  adicionarNaFila('anotacao', { texto, partilhada });
+  if (estaOnline()) sincronizarFila();
+
+  // Limpar e fechar
+  document.getElementById('texto-anotacao').value = '';
+  document.getElementById('toggle-partilhar').classList.remove('ligado');
+  fecharEditor();
+}
+
+function renderizarAnotacoes() {
+  const lista = document.getElementById('lista-anotacoes');
+
+  if (anotacoes.length === 0) {
+    lista.innerHTML = `
+      <div class="anotacao-vazia">
+        <p>Nada aqui ainda.<br>Isso não é vazio — é espaço.</p>
+        <button class="entrar-btn" onclick="abrirEditor()" style="animation:none;opacity:1;">Escrever algo</button>
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = anotacoes.map(a => `
+    <div class="anotacao-card" onclick="abrirMenuItem('anotacao', ${a.id})">
+      <div class="anotacao-card-topo">
+        <span class="anotacao-data">${a.data}</span>
+        <span class="anotacao-privacidade">${a.partilhada ? '◈ partilhado' : '◐ só seu'}</span>
+      </div>
+      <p class="anotacao-texto">${a.texto}</p>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// ABAS DA TELA DE CRIAÇÃO (Anotações / Agenda)
+// ============================================================
+let abaCriacaoAtiva = 'anotacoes';
+
+function trocarAbaCriacao(aba) {
+  abaCriacaoAtiva = aba;
+
+  document.querySelectorAll('.criacao-aba').forEach(btn => {
+    btn.classList.toggle('ativa', btn.dataset.aba === aba);
+  });
+  document.getElementById('painel-anotacoes').classList.toggle('ativo', aba === 'anotacoes');
+  document.getElementById('painel-agenda').classList.toggle('ativo', aba === 'agenda');
+
+  // O botão "+" abre o editor certo dependendo da aba visível
+  const btnNovo = document.getElementById('btn-novo-item');
+  btnNovo.setAttribute('onclick', aba === 'anotacoes' ? 'abrirEditor()' : 'abrirEditorAgenda()');
+}
+
+// ============================================================
+// EDITOR DE AGENDA (compromissos + intenções)
+// ============================================================
+let tipoAgendaAtual = 'intencao';
+let agendaItens = [];
+let proximoIdAgenda = 1;
+let editandoAgendaId = null; // null = criando novo; caso contrário, editando este
+
+function abrirEditorAgenda() {
+  document.getElementById('editor-agenda').classList.add('aberto');
+  setTimeout(() => document.getElementById('texto-agenda').focus(), 400);
+}
+
+function fecharEditorAgenda() {
+  document.getElementById('editor-agenda').classList.remove('aberto');
+}
+
+function selecionarTipoAgenda(tipo) {
+  tipoAgendaAtual = tipo;
+  document.getElementById('btn-tipo-intencao').classList.toggle('ativo', tipo === 'intencao');
+  document.getElementById('btn-tipo-compromisso').classList.toggle('ativo', tipo === 'compromisso');
+
+  const camposData = document.getElementById('campos-data-hora');
+  camposData.style.display = tipo === 'compromisso' ? 'flex' : 'none';
+
+  const textarea = document.getElementById('texto-agenda');
+  textarea.placeholder = tipo === 'compromisso'
+    ? 'Do que se trata este compromisso?'
+    : 'O que você pretende para este momento?';
+}
+
+function salvarAgenda() {
+  const texto = document.getElementById('texto-agenda').value.trim();
+  if (texto.length === 0) {
+    fecharEditorAgenda();
+    return;
+  }
+
+  const dadosAtualizados = {
+    texto,
+    tipo: tipoAgendaAtual,
+    data: tipoAgendaAtual === 'compromisso' ? document.getElementById('agenda-data').value : null,
+    hora: tipoAgendaAtual === 'compromisso' ? document.getElementById('agenda-hora').value : null
+  };
+
+  if (editandoAgendaId !== null) {
+    // Modo edição — atualiza o item existente, preservando se já estava partilhado
+    const item = agendaItens.find(i => i.id === editandoAgendaId);
+    if (item) Object.assign(item, dadosAtualizados);
+    editandoAgendaId = null;
+  } else {
+    // Modo criação — novo item, começa sempre privado
+    agendaItens.unshift({ id: proximoIdAgenda++, partilhada: false, ...dadosAtualizados });
+  }
+
+  renderizarAgenda();
+  renderizarComunidade();
+
+  // Mesma lógica de sincronização offline usada nas anotações
+  adicionarNaFila('agenda', dadosAtualizados);
+  if (estaOnline()) sincronizarFila();
+
+  // Limpar e fechar
+  document.getElementById('texto-agenda').value = '';
+  document.getElementById('agenda-data').value = '';
+  document.getElementById('agenda-hora').value = '';
+  selecionarTipoAgenda('intencao');
+  fecharEditorAgenda();
+}
+
+function formatarDataAgenda(dataISO) {
+  if (!dataISO) return '';
+  const [ano, mes, dia] = dataISO.split('-');
+  return `${dia}/${mes}`;
+}
+
+function renderizarAgenda() {
+  const lista = document.getElementById('lista-agenda');
+
+  if (agendaItens.length === 0) {
+    lista.innerHTML = `
+      <div class="anotacao-vazia">
+        <p>Nenhuma intenção ou compromisso ainda.<br>O tempo também é espaço.</p>
+        <button class="entrar-btn" onclick="abrirEditorAgenda()" style="animation:none;opacity:1;">Adicionar algo</button>
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = agendaItens.map(item => {
+    const classeType = item.tipo === 'compromisso' ? 'tipo-compromisso' : 'tipo-intencao';
+    const marcador = item.tipo === 'compromisso'
+      ? `${formatarDataAgenda(item.data)} ${item.hora || ''}`.trim()
+      : 'sem hora';
+    const label = item.tipo === 'compromisso' ? 'Compromisso' : 'Intenção';
+
+    return `
+      <div class="agenda-item ${classeType}" onclick="abrirMenuItem('agenda', ${item.id})">
+        <span class="agenda-marcador">${marcador || 'sem data'}</span>
+        <div class="agenda-conteudo">
+          <p class="agenda-texto">${item.texto}</p>
+          <span class="agenda-tipo-label">${label}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// MENU DE CONTEXTO — Editar / Apagar / Enviar
+// (compartilhado entre Anotações e Agenda)
+// ============================================================
+let itemMenuAtual = { tipo: null, id: null }; // tipo: 'anotacao' | 'agenda'
+
+function abrirMenuItem(tipo, id) {
+  itemMenuAtual = { tipo, id };
+
+  // Ajusta o texto do botão de envio conforme o estado atual do item
+  const btnEnviar = document.getElementById('btn-enviar-comunidade');
+  const item = tipo === 'anotacao'
+    ? anotacoes.find(a => a.id === id)
+    : agendaItens.find(i => i.id === id);
+
+  btnEnviar.textContent = item && item.partilhada
+    ? '◐ Remover da comunidade'
+    : '◈ Enviar à comunidade';
+
+  document.getElementById('overlay-menu-item').classList.add('aberto');
+}
+
+function fecharMenuItem() {
+  document.getElementById('overlay-menu-item').classList.remove('aberto');
+}
+
+function editarItemAtual() {
+  const { tipo, id } = itemMenuAtual;
+  fecharMenuItem();
+
+  if (tipo === 'anotacao') {
+    const item = anotacoes.find(a => a.id === id);
+    if (!item) return;
+    editandoAnotacaoId = id;
+    document.getElementById('texto-anotacao').value = item.texto;
+    document.getElementById('toggle-partilhar').classList.toggle('ligado', item.partilhada);
+    abrirEditor();
+  } else if (tipo === 'agenda') {
+    const item = agendaItens.find(i => i.id === id);
+    if (!item) return;
+    editandoAgendaId = id;
+    document.getElementById('texto-agenda').value = item.texto;
+    selecionarTipoAgenda(item.tipo);
+    if (item.tipo === 'compromisso') {
+      document.getElementById('agenda-data').value = item.data || '';
+      document.getElementById('agenda-hora').value = item.hora || '';
+    }
+    abrirEditorAgenda();
+  }
+}
+
+function apagarItemAtual() {
+  const { tipo, id } = itemMenuAtual;
+  fecharMenuItem();
+
+  if (tipo === 'anotacao') {
+    anotacoes = anotacoes.filter(a => a.id !== id);
+    renderizarAnotacoes();
+  } else if (tipo === 'agenda') {
+    agendaItens = agendaItens.filter(i => i.id !== id);
+    renderizarAgenda();
+  }
+}
+
+function alternarEnvioComunidade() {
+  const { tipo, id } = itemMenuAtual;
+
+  if (tipo === 'anotacao') {
+    const item = anotacoes.find(a => a.id === id);
+    if (item) {
+      item.partilhada = !item.partilhada;
+      renderizarAnotacoes();
+      renderizarComunidade();
+      adicionarNaFila('anotacao', { texto: item.texto, partilhada: item.partilhada });
+      if (estaOnline()) sincronizarFila();
+      mostrarConfirmacao(item.partilhada ? 'Enviado à comunidade' : 'Removido da comunidade');
+    }
+  } else if (tipo === 'agenda') {
+    const item = agendaItens.find(i => i.id === id);
+    if (item) {
+      item.partilhada = !item.partilhada;
+      renderizarAgenda();
+      renderizarComunidade();
+      adicionarNaFila('agenda', { texto: item.texto, tipo: item.tipo, partilhada: item.partilhada });
+      if (estaOnline()) sincronizarFila();
+      mostrarConfirmacao(item.partilhada ? 'Enviado à comunidade' : 'Removido da comunidade');
+    }
+  }
+
+  fecharMenuItem();
+}
+
+// Posts fixos de exemplo — agora tratados como dados reais, podendo ser
+// arquivados ou removidos como qualquer partilha da comunidade.
+let postsFixos = [
+  { id: 'fixo-1', autor: 'J Vitor Fernandes', texto: '"Percebi hoje que eu media meu valor pelo que os outros aprovavam. Isso não vem de mim."', arquivado: false, removido: false },
+  { id: 'fixo-2', autor: 'J Vitor Fernandes', texto: 'Passei os 7 dias de treino dos sentidos. O dia do silêncio foi o mais difícil e o mais real.', arquivado: false, removido: false }
+];
+
+let postsArquivados = []; // guarda referência do que foi arquivado, para consulta futura
+
+function renderizarComunidade() {
+  const container = document.getElementById('partilhas-reais');
+  if (!container) return;
+
+  const fixosVisiveis = postsFixos
+    .filter(p => !p.arquivado && !p.removido)
+    .map(p => ({ id: p.id, origem: 'fixo', autor: p.autor, texto: p.texto }));
+
+  const anotacoesPartilhadas = anotacoes
+    .filter(a => a.partilhada)
+    .map(a => ({ id: `anotacao-${a.id}`, origem: 'anotacao', refId: a.id, autor: `você — ${a.data}`, texto: a.texto }));
+
+  const agendaPartilhada = agendaItens
+    .filter(i => i.partilhada)
+    .map(i => {
+      const marcador = i.tipo === 'compromisso'
+        ? `${formatarDataAgenda(i.data)} ${i.hora || ''}`.trim()
+        : 'intenção';
+      return { id: `agenda-${i.id}`, origem: 'agenda', refId: i.id, autor: `você — ${marcador}`, texto: i.texto };
+    });
+
+  const todas = [...fixosVisiveis, ...anotacoesPartilhadas, ...agendaPartilhada];
+
+  if (todas.length === 0) {
+    container.innerHTML = `
+      <div class="comunidade-crescimento">
+        <p>Este espaço cresce com quem chega.<br>Em breve, novas presenças aparecem aqui.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = todas.map(item => `
+    <div class="partilha-card">
+      <div class="partilha-card-topo">
+        <p class="partilha-autor">${item.autor}</p>
+        <button class="partilha-opcoes-btn" onclick="abrirMenuPost('${item.id}', '${item.origem}', ${item.refId ?? 'null'})">⋯</button>
+      </div>
+      <p class="partilha-texto">${item.texto}</p>
+      <div class="partilha-acoes">
+        <button class="partilha-acao">◐ reconheço isso</button>
+        <button class="partilha-acao">✎ responder</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// MENU DA COMUNIDADE — Arquivar / Remover
+// ============================================================
+let postMenuAtual = { id: null, origem: null, refId: null };
+
+function abrirMenuPost(id, origem, refId) {
+  postMenuAtual = { id, origem, refId };
+  document.getElementById('overlay-menu-post').classList.add('aberto');
+}
+
+function fecharMenuPost() {
+  document.getElementById('overlay-menu-post').classList.remove('aberto');
+}
+
+function arquivarPostAtual() {
+  const { id, origem, refId } = postMenuAtual;
+
+  if (origem === 'fixo') {
+    const post = postsFixos.find(p => p.id === id);
+    if (post) {
+      post.arquivado = true;
+      postsArquivados.push({ ...post });
+    }
+  } else if (origem === 'anotacao') {
+    const item = anotacoes.find(a => a.id === refId);
+    if (item) {
+      postsArquivados.push({ origem, autor: 'você', texto: item.texto, data: item.data });
+      item.partilhada = false; // some da comunidade, mas continua em Sua Criação
+    }
+  } else if (origem === 'agenda') {
+    const item = agendaItens.find(i => i.id === refId);
+    if (item) {
+      postsArquivados.push({ origem, autor: 'você', texto: item.texto });
+      item.partilhada = false;
+    }
+  }
+
+  renderizarComunidade();
+  renderizarAnotacoes();
+  renderizarAgenda();
+  mostrarConfirmacao('Arquivado');
+  fecharMenuPost();
+}
+
+function removerPostAtual() {
+  const { id, origem, refId } = postMenuAtual;
+
+  if (origem === 'fixo') {
+    const post = postsFixos.find(p => p.id === id);
+    if (post) post.removido = true;
+  } else if (origem === 'anotacao') {
+    const item = anotacoes.find(a => a.id === refId);
+    if (item) item.partilhada = false;
+  } else if (origem === 'agenda') {
+    const item = agendaItens.find(i => i.id === refId);
+    if (item) item.partilhada = false;
+  }
+
+  renderizarComunidade();
+  renderizarAnotacoes();
+  renderizarAgenda();
+  mostrarConfirmacao('Removido da comunidade');
+  fecharMenuPost();
+}
+
+function mostrarConfirmacao(mensagem) {
+  const indicador = document.getElementById('indicador-offline');
+  if (!indicador) return;
+  indicador.textContent = `✓ ${mensagem}`;
+  indicador.classList.add('visivel');
+  setTimeout(() => {
+    // Só esconde se ainda for essa mesma mensagem (evita cortar um aviso mais novo)
+    if (indicador.textContent === `✓ ${mensagem}`) {
+      indicador.classList.remove('visivel');
+    }
+  }, 2500);
+}
+
+// ============================================================
+// CAMPO DE CONSTELAÇÃO — fundo ambiente que reage às respostas
+// ============================================================
+const canvas = document.getElementById('constelacao');
+const ctx = canvas.getContext('2d');
+let pontos = [];
+
+function redimensionar() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+redimensionar();
+window.addEventListener('resize', redimensionar);
+
+// Pontos ambiente iniciais (bem sutis, sempre presentes)
+for (let i = 0; i < 22; i++) {
+  pontos.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.2 + 0.3,
+    opacidade: Math.random() * 0.25 + 0.05,
+    vx: (Math.random() - 0.5) * 0.05,
+    vy: (Math.random() - 0.5) * 0.05,
+    dourado: false
+  });
+}
+
+function adicionarPontoConstelacao(fraco = false) {
+  pontos.push({
+    x: canvas.width * (0.3 + Math.random() * 0.4),
+    y: canvas.height * (0.3 + Math.random() * 0.4),
+    r: Math.random() * 1.5 + 1,
+    opacidade: fraco ? 0.15 : 0.55,
+    vx: (Math.random() - 0.5) * 0.08,
+    vy: (Math.random() - 0.5) * 0.08,
+    dourado: true,
+    vida: 1
+  });
+}
+
+function animar() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  pontos.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+
+    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.dourado
+      ? `rgba(184, 147, 90, ${p.opacidade})`
+      : `rgba(237, 234, 227, ${p.opacidade})`;
+    ctx.fill();
+  });
+
+  // Linhas sutis entre pontos dourados próximos (constelação pessoal)
+  const douradosAtivos = pontos.filter(p => p.dourado);
+  for (let i = 0; i < douradosAtivos.length; i++) {
+    for (let j = i + 1; j < douradosAtivos.length; j++) {
+      const a = douradosAtivos[i], b = douradosAtivos[j];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (dist < 180) {
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `rgba(184, 147, 90, ${0.08 * (1 - dist / 180)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  requestAnimationFrame(animar);
+}
+animar();
+
+</script>
+</body>
+</html>
