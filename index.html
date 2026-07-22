@@ -1268,6 +1268,35 @@
     align-items: center;
     gap: 5px;
   }
+  .partilha-acao.ativo {
+    color: var(--dourado);
+  }
+  .partilha-respostas {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--linha);
+  }
+  .resposta-item {
+    margin-bottom: 12px;
+  }
+  .resposta-autor {
+    font-size: 11px;
+    color: var(--dourado-fraco);
+    margin-bottom: 3px;
+  }
+  .resposta-texto {
+    font-family: 'Fraunces', serif;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--osso);
+  }
+  .resposta-carregando {
+    font-size: 12px;
+    color: var(--osso-fraco);
+  }
+  .resposta-form {
+    margin-top: 8px;
+  }
 
   .comunidade-crescimento {
     text-align: center;
@@ -1805,7 +1834,9 @@ const supabaseUrl = 'https://cawvxladfbkabvvtouag.supabase.co';
 const supabaseKey = 'sb_publishable_G0ky94FqYoX__lDz22mclQ_ar-TAYHT';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// Estrutura esperada no banco (rode isto uma vez no SQL Editor do Supabase):
+// Estrutura esperada no banco (rode isto uma vez no SQL Editor do Supabase —
+// se as tabelas "perfis" e "reflexoes" já existirem, rode só a parte nova
+// a partir de "create table reconhecimentos"):
 //
 // create table perfis (
 //   id uuid primary key references auth.users(id) on delete cascade,
@@ -1815,13 +1846,16 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 //   criado_em timestamptz default now()
 // );
 // alter table perfis enable row level security;
-// create policy "cada pessoa vê e edita só o próprio perfil"
+// create policy "cada pessoa edita só o próprio perfil"
 //   on perfis for all using (auth.uid() = id) with check (auth.uid() = id);
+// -- Sem isto, ninguém consegue ver o NOME de quem partilhou algo além de si mesmo:
+// create policy "qualquer pessoa autenticada pode ver o nome de outros perfis"
+//   on perfis for select using (auth.role() = 'authenticated');
 //
 // create table reflexoes (
 //   id uuid primary key default gen_random_uuid(),
 //   user_id uuid references auth.users(id) on delete cascade,
-//   tipo text not null,          -- 'anotacao' ou 'agenda'
+//   tipo text not null,          -- 'anotacao', 'agenda' ou 'identidade'
 //   conteudo jsonb not null,
 //   partilhada boolean default false,
 //   criado_em timestamptz default now()
@@ -1831,6 +1865,44 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 //   on reflexoes for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 // create policy "todo mundo pode ler o que foi partilhado"
 //   on reflexoes for select using (partilhada = true);
+//
+// create table reconhecimentos (
+//   id uuid primary key default gen_random_uuid(),
+//   reflexao_id uuid not null references reflexoes(id) on delete cascade,
+//   user_id uuid not null references auth.users(id) on delete cascade,
+//   criado_em timestamptz default now(),
+//   unique (reflexao_id, user_id)
+// );
+// alter table reconhecimentos enable row level security;
+// create policy "qualquer autenticado lê os reconhecimentos"
+//   on reconhecimentos for select using (auth.role() = 'authenticated');
+// create policy "cada pessoa marca só o próprio reconhecimento"
+//   on reconhecimentos for insert with check (auth.uid() = user_id);
+// create policy "cada pessoa remove só o próprio reconhecimento"
+//   on reconhecimentos for delete using (auth.uid() = user_id);
+//
+// create table respostas_comunidade (
+//   id uuid primary key default gen_random_uuid(),
+//   reflexao_id uuid not null references reflexoes(id) on delete cascade,
+//   user_id uuid not null references auth.users(id) on delete cascade,
+//   texto text not null,
+//   criado_em timestamptz default now()
+// );
+// alter table respostas_comunidade enable row level security;
+// create policy "qualquer autenticado lê as respostas"
+//   on respostas_comunidade for select using (auth.role() = 'authenticated');
+// create policy "cada pessoa cria só a própria resposta"
+//   on respostas_comunidade for insert with check (auth.uid() = user_id);
+//
+// -- Os 2 posts fixos de exemplo agora são partilhas reais de sua conta de
+// -- fundador (troque o e-mail se usar outro), pra poderem receber
+// -- reconhecimentos e respostas como qualquer partilha:
+// insert into reflexoes (user_id, tipo, conteudo, partilhada)
+// values
+//   ((select id from auth.users where email = 'sociedadedainternet@gmail.com'),
+//    'anotacao', '{"texto":"Percebi hoje que eu media meu valor pelo que os outros aprovavam. Isso não vem de mim."}', true),
+//   ((select id from auth.users where email = 'sociedadedainternet@gmail.com'),
+//    'anotacao', '{"texto":"Passei os 7 dias de treino dos sentidos. O dia do silêncio foi o mais difícil e o mais real."}', true);
 
 // Busca as anotações e itens de agenda salvos no servidor e repõe nos
 // arrays locais, para a pessoa continuar de onde parou em qualquer aparelho.
@@ -1882,6 +1954,7 @@ async function carregarDadosDoServidor() {
   renderizarAgenda();
   renderizarIdentidade();
   renderizarComunidade();
+  salvarSessao(); // mantém o cache do aparelho alinhado com o servidor
 }
 
 // ============================================================
@@ -1955,7 +2028,10 @@ let dadosConta = { nome: '', cpf: '', email: '' };
 
 function salvarSessao() {
   try {
-    localStorage.setItem('ecossistema_sessao', JSON.stringify(dadosConta));
+    localStorage.setItem('ecossistema_sessao', JSON.stringify({
+      conta: dadosConta,
+      identidade: identidadeRespostas
+    }));
   } catch (e) {
     // Armazenamento indisponível (ex: modo privado) — a sessão simplesmente não persiste
   }
@@ -1965,7 +2041,16 @@ function carregarSessaoSalva() {
   try {
     const salvo = localStorage.getItem('ecossistema_sessao');
     if (salvo) {
-      dadosConta = JSON.parse(salvo);
+      const dados = JSON.parse(salvo);
+      // Compatível com o formato antigo (só dadosConta, sem identidade)
+      if (dados && dados.conta) {
+        dadosConta = dados.conta;
+        if (Array.isArray(dados.identidade) && dados.identidade.length === perguntas.length) {
+          identidadeRespostas = dados.identidade;
+        }
+      } else {
+        dadosConta = dados;
+      }
       return true;
     }
   } catch (e) {
@@ -2487,6 +2572,7 @@ function alternarPartilhaIdentidade(indice) {
   const item = identidadeRespostas[indice];
   if (!item) return;
   item.partilhada = !item.partilhada;
+  salvarSessao();
   renderizarIdentidade();
   renderizarComunidade();
   adicionarNaFila('identidade', { perguntaIndex: indice, pergunta: perguntas[indice].texto, resposta: item.resposta, partilhada: item.partilhada });
@@ -2504,10 +2590,13 @@ function reescreverResposta(indice) {
 }
 
 // ---------- Perguntas estratégicas — antes de começar a história ----------
+// `temInformacao: true` só quando a resposta em "Sobre" (tela-sobre) já
+// cobre essa pergunta de fato. Enquanto não adicionar mais conteúdo lá,
+// as outras perguntas mostram só "Reconheça isso." sem o link.
 const perguntasEstrategicas = [
-  "Como faço algo assim?",
-  "Por onde eu começo, de verdade?",
-  "Isso vai mudar alguma coisa em mim?"
+  { texto: "Como faço algo assim?", temInformacao: true },
+  { texto: "Por onde eu começo, de verdade?", temInformacao: false },
+  { texto: "Isso vai mudar alguma coisa em mim?", temInformacao: false }
 ];
 
 function abrirPerguntasEstrategicas() {
@@ -2519,8 +2608,8 @@ function abrirPerguntasEstrategicas() {
 
 function renderizarPerguntasEstrategicas() {
   const container = document.getElementById('lista-perguntas-estrategicas');
-  container.innerHTML = perguntasEstrategicas.map(q =>
-    `<button class="opcao" onclick="responderEstrategica(this.textContent)">${q}</button>`
+  container.innerHTML = perguntasEstrategicas.map((q, i) =>
+    `<button class="opcao" onclick="responderEstrategica(${i})">${q.texto}</button>`
   ).join('');
 }
 
@@ -2533,21 +2622,28 @@ function enviarPerguntaPropria() {
   const agora = new Date();
   const dataFormatada = agora.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
   const textoAnotacao = `Pergunta: ${texto}`;
-  anotacoes.unshift({ id: proximoIdAnotacao++, texto: textoAnotacao, data: dataFormatada, partilhada: false });
+  anotacoes.unshift({ id: proximoIdAnotacao++, texto: textoAnotacao, data: dataFormatada, criadoEm: agora.toISOString(), partilhada: false });
   renderizarAnotacoes();
   adicionarNaFila('anotacao', { texto: textoAnotacao, partilhada: false });
   if (estaOnline()) sincronizarFila();
 
   input.value = '';
-  responderEstrategica(texto);
+  // Pergunta criada pela própria pessoa nunca tem página de informação associada.
+  responderEstrategica({ texto, temInformacao: false });
 }
 
-function responderEstrategica(pergunta) {
+function responderEstrategica(perguntaOuIndice) {
+  const pergunta = typeof perguntaOuIndice === 'number'
+    ? perguntasEstrategicas[perguntaOuIndice]
+    : perguntaOuIndice;
+
   const container = document.getElementById('resposta-estrategica');
   container.innerHTML = `
-    <h4>${pergunta}</h4>
+    <h4>${pergunta.texto}</h4>
     <p style="font-family:'Fraunces', serif; font-size:15px; color:var(--osso);">Reconheça isso.</p>
-    <button class="continuar-btn pronto" style="margin-top:4px;" onclick="irPara('tela-sobre')">Seguir para informações</button>
+    ${pergunta.temInformacao
+      ? `<button class="continuar-btn pronto" style="margin-top:4px;" onclick="irPara('tela-sobre')">Seguir para informações</button>`
+      : ''}
   `;
   container.style.display = 'block';
 }
@@ -2636,7 +2732,8 @@ function verificarCampoLivre(input) {
 
 function salvarRespostaAtual(resposta) {
   const partilhadaAnterior = identidadeRespostas[perguntaAtual]?.partilhada || false;
-  identidadeRespostas[perguntaAtual] = { resposta, partilhada: partilhadaAnterior };
+  identidadeRespostas[perguntaAtual] = { resposta, partilhada: partilhadaAnterior, criadoEm: new Date().toISOString() };
+  salvarSessao(); // cache local imediato — a pergunta não volta a aparecer, mesmo offline
   adicionarNaFila('identidade', {
     perguntaIndex: perguntaAtual,
     pergunta: perguntas[perguntaAtual].texto,
@@ -2996,73 +3093,190 @@ function alternarEnvioComunidade() {
   fecharMenuItem();
 }
 
-// Posts fixos de exemplo — agora tratados como dados reais, podendo ser
-// arquivados ou removidos como qualquer partilha da comunidade.
-let postsFixos = [
-  { id: 'fixo-1', autor: 'J Vitor Fernandes', texto: '"Percebi hoje que eu media meu valor pelo que os outros aprovavam. Isso não vem de mim."', arquivado: false, removido: false },
-  { id: 'fixo-2', autor: 'J Vitor Fernandes', texto: 'Passei os 7 dias de treino dos sentidos. O dia do silêncio foi o mais difícil e o mais real.', arquivado: false, removido: false }
-];
+// ============================================================
+// COMUNIDADE — feed real, entre todas as pessoas com conta
+// ============================================================
+// Os dois posts fixos de exemplo (J Vitor Fernandes) agora vivem no banco,
+// como qualquer outra partilha — veja o SQL de seed no topo do arquivo.
+// `comunidadeCache` guarda o último feed carregado, usado pelos botões
+// de reconhecer/responder/arquivar sem precisar buscar tudo de novo.
+let comunidadeCache = [];
+let meuUserIdComunidade = null;
+let postMenuAtual = null;
 
-let postsArquivados = []; // guarda referência do que foi arquivado, para consulta futura
+function formatarDataHoraCompleta(iso) {
+  const d = iso ? new Date(iso) : new Date();
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const hora = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${dia}/${mes}/${d.getFullYear()} ${hora}:${min}`;
+}
 
-function renderizarComunidade() {
+async function renderizarComunidade() {
   const container = document.getElementById('partilhas-reais');
   if (!container) return;
 
-  const fixosVisiveis = postsFixos
-    .filter(p => !p.arquivado && !p.removido)
-    .map(p => ({ id: p.id, origem: 'fixo', autor: p.autor, texto: p.texto }));
+  if (!estaOnline()) {
+    container.innerHTML = `<div class="comunidade-crescimento"><p>Fique online para ver e interagir com a comunidade.</p></div>`;
+    return;
+  }
 
-  const anotacoesPartilhadas = anotacoes
-    .filter(a => a.partilhada)
-    .map(a => ({ id: `anotacao-${a.id}`, origem: 'anotacao', refId: a.id, autor: `você — ${a.data}`, texto: a.texto }));
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    container.innerHTML = `<div class="comunidade-crescimento"><p>Entre na sua conta para ver a comunidade.</p></div>`;
+    return;
+  }
+  meuUserIdComunidade = session.user.id;
 
-  const agendaPartilhada = agendaItens
-    .filter(i => i.partilhada)
-    .map(i => {
-      const marcador = i.tipo === 'compromisso'
-        ? `${formatarDataAgenda(i.data)} ${i.hora || ''}`.trim()
-        : 'intenção';
-      return { id: `agenda-${i.id}`, origem: 'agenda', refId: i.id, autor: `você — ${marcador}`, texto: i.texto };
-    });
+  const { data: reflexoes, error } = await supabaseClient
+    .from('reflexoes')
+    .select('*')
+    .eq('partilhada', true)
+    .order('criado_em', { ascending: false });
 
-  const identidadePartilhada = identidadeRespostas
-    .map((r, i) => (r && r.partilhada ? { id: `identidade-${i}`, origem: 'identidade', refId: i, autor: 'você — identidade', texto: r.resposta } : null))
-    .filter(Boolean);
-
-  const todas = [...fixosVisiveis, ...anotacoesPartilhadas, ...agendaPartilhada, ...identidadePartilhada];
-
-  if (todas.length === 0) {
+  if (error || !reflexoes || reflexoes.length === 0) {
     container.innerHTML = `
       <div class="comunidade-crescimento">
         <p>Este espaço cresce com quem chega.<br>Em breve, novas presenças aparecem aqui.</p>
       </div>
     `;
+    comunidadeCache = [];
     return;
   }
 
-  container.innerHTML = todas.map(item => `
+  const ids = reflexoes.map(r => r.id);
+  const idsUsuarios = [...new Set(reflexoes.map(r => r.user_id))];
+
+  const [{ data: perfis }, { data: reconhecimentos }, { data: respostas }] = await Promise.all([
+    supabaseClient.from('perfis').select('id, nome').in('id', idsUsuarios),
+    supabaseClient.from('reconhecimentos').select('reflexao_id, user_id').in('reflexao_id', ids),
+    supabaseClient.from('respostas_comunidade').select('reflexao_id').in('reflexao_id', ids)
+  ]);
+
+  const nomesPorId = Object.fromEntries((perfis || []).map(p => [p.id, p.nome]));
+
+  comunidadeCache = reflexoes.map(r => {
+    const reconhecimentosDoPost = (reconhecimentos || []).filter(x => x.reflexao_id === r.id);
+    return {
+      id: r.id,
+      tipo: r.tipo,
+      userId: r.user_id,
+      mine: r.user_id === meuUserIdComunidade,
+      autor: nomesPorId[r.user_id] || 'Alguém do espaço',
+      dataHora: formatarDataHoraCompleta(r.criado_em),
+      texto: r.conteudo?.texto || r.conteudo?.resposta || '',
+      totalReconhecimentos: reconhecimentosDoPost.length,
+      euReconheci: reconhecimentosDoPost.some(x => x.user_id === meuUserIdComunidade),
+      totalRespostas: (respostas || []).filter(x => x.reflexao_id === r.id).length
+    };
+  });
+
+  container.innerHTML = comunidadeCache.map(item => `
     <div class="partilha-card">
       <div class="partilha-card-topo">
-        <p class="partilha-autor">${item.autor}</p>
-        <button class="partilha-opcoes-btn" onclick="abrirMenuPost('${item.id}', '${item.origem}', ${item.refId ?? 'null'})">⋯</button>
+        <p class="partilha-autor">${item.autor} — ${item.dataHora}</p>
+        ${item.mine ? `<button class="partilha-opcoes-btn" onclick="abrirMenuPost('${item.id}')">⋯</button>` : ''}
       </div>
       <p class="partilha-texto">${item.texto}</p>
       <div class="partilha-acoes">
-        <button class="partilha-acao">◐ reconheço isso</button>
-        <button class="partilha-acao">✎ responder</button>
+        <button class="partilha-acao ${item.euReconheci ? 'ativo' : ''}" onclick="toggleReconhecimento('${item.id}')">
+          ◐ reconheço isso${item.totalReconhecimentos > 0 ? ` (${item.totalReconhecimentos})` : ''}
+        </button>
+        <button class="partilha-acao" onclick="abrirRespostas('${item.id}')">
+          ✎ responder${item.totalRespostas > 0 ? ` (${item.totalRespostas})` : ''}
+        </button>
       </div>
+      <div class="partilha-respostas" id="respostas-${item.id}" style="display:none;"></div>
     </div>
   `).join('');
 }
 
-// ============================================================
-// MENU DA COMUNIDADE — Arquivar / Remover
-// ============================================================
-let postMenuAtual = { id: null, origem: null, refId: null };
+async function toggleReconhecimento(reflexaoId) {
+  if (!meuUserIdComunidade) return;
+  const item = comunidadeCache.find(i => i.id === reflexaoId);
+  if (!item) return;
 
-function abrirMenuPost(id, origem, refId) {
-  postMenuAtual = { id, origem, refId };
+  if (item.euReconheci) {
+    await supabaseClient.from('reconhecimentos').delete()
+      .eq('reflexao_id', reflexaoId).eq('user_id', meuUserIdComunidade);
+  } else {
+    await supabaseClient.from('reconhecimentos').insert({ reflexao_id: reflexaoId, user_id: meuUserIdComunidade });
+  }
+  renderizarComunidade();
+}
+
+async function abrirRespostas(reflexaoId) {
+  const painel = document.getElementById(`respostas-${reflexaoId}`);
+  if (!painel) return;
+
+  if (painel.style.display === 'block') {
+    painel.style.display = 'none';
+    return;
+  }
+
+  painel.innerHTML = `<p class="resposta-carregando">Carregando...</p>`;
+  painel.style.display = 'block';
+
+  const { data: respostas } = await supabaseClient
+    .from('respostas_comunidade')
+    .select('*')
+    .eq('reflexao_id', reflexaoId)
+    .order('criado_em', { ascending: true });
+
+  const idsUsuarios = [...new Set((respostas || []).map(r => r.user_id))];
+  const { data: perfis } = idsUsuarios.length
+    ? await supabaseClient.from('perfis').select('id, nome').in('id', idsUsuarios)
+    : { data: [] };
+  const nomesPorId = Object.fromEntries((perfis || []).map(p => [p.id, p.nome]));
+
+  const listaHtml = (respostas || []).map(r => `
+    <div class="resposta-item">
+      <p class="resposta-autor">${nomesPorId[r.user_id] || 'Alguém do espaço'} — ${formatarDataHoraCompleta(r.criado_em)}</p>
+      <p class="resposta-texto">${r.texto}</p>
+    </div>
+  `).join('');
+
+  painel.innerHTML = `
+    ${listaHtml}
+    <div class="resposta-form">
+      <input type="text" class="campo-livre" id="campo-resposta-${reflexaoId}" placeholder="Escreva sua resposta..." style="text-align:left;">
+      <button class="continuar-btn pronto" style="margin-top:8px;" onclick="enviarResposta('${reflexaoId}')">Enviar</button>
+    </div>
+  `;
+}
+
+async function enviarResposta(reflexaoId) {
+  const input = document.getElementById(`campo-resposta-${reflexaoId}`);
+  const texto = input.value.trim();
+  if (!texto || !meuUserIdComunidade) return;
+
+  await supabaseClient.from('respostas_comunidade').insert({ reflexao_id: reflexaoId, user_id: meuUserIdComunidade, texto });
+  input.value = '';
+  await renderizarComunidade();
+  abrirRespostas(reflexaoId);
+}
+
+// Quando a pessoa remove/arquiva a própria partilha, tenta refletir isso
+// também na cópia local (Sua Criação / Identidade), casando pelo texto.
+function sincronizarPartilhaLocal(item) {
+  if (item.tipo === 'anotacao') {
+    const local = anotacoes.find(a => a.texto === item.texto);
+    if (local) { local.partilhada = false; renderizarAnotacoes(); }
+  } else if (item.tipo === 'agenda') {
+    const local = agendaItens.find(a => a.texto === item.texto);
+    if (local) { local.partilhada = false; renderizarAgenda(); }
+  } else if (item.tipo === 'identidade') {
+    const local = identidadeRespostas.find(r => r && r.resposta === item.texto);
+    if (local) { local.partilhada = false; salvarSessao(); renderizarIdentidade(); }
+  }
+}
+
+// ============================================================
+// MENU DA COMUNIDADE — Arquivar / Remover (só na própria partilha)
+// ============================================================
+function abrirMenuPost(id) {
+  postMenuAtual = id;
   document.getElementById('overlay-menu-post').classList.add('aberto');
 }
 
@@ -3070,72 +3284,24 @@ function fecharMenuPost() {
   document.getElementById('overlay-menu-post').classList.remove('aberto');
 }
 
-function arquivarPostAtual() {
-  const { id, origem, refId } = postMenuAtual;
-
-  if (origem === 'fixo') {
-    const post = postsFixos.find(p => p.id === id);
-    if (post) {
-      post.arquivado = true;
-      postsArquivados.push({ ...post });
-    }
-  } else if (origem === 'anotacao') {
-    const item = anotacoes.find(a => a.id === refId);
-    if (item) {
-      postsArquivados.push({ origem, autor: 'você', texto: item.texto, data: item.data });
-      item.partilhada = false; // some da comunidade, mas continua em Sua Criação
-    }
-  } else if (origem === 'agenda') {
-    const item = agendaItens.find(i => i.id === refId);
-    if (item) {
-      postsArquivados.push({ origem, autor: 'você', texto: item.texto });
-      item.partilhada = false;
-    }
-  } else if (origem === 'identidade') {
-    const item = identidadeRespostas[refId];
-    if (item) {
-      postsArquivados.push({ origem, autor: 'você', texto: item.resposta });
-      item.partilhada = false;
-      adicionarNaFila('identidade', { perguntaIndex: refId, pergunta: perguntas[refId].texto, resposta: item.resposta, partilhada: false });
-      if (estaOnline()) sincronizarFila();
-    }
-  }
-
-  renderizarComunidade();
-  renderizarAnotacoes();
-  renderizarAgenda();
-  renderizarIdentidade();
-  mostrarConfirmacao('Arquivado');
+async function arquivarPostAtual() {
+  if (!postMenuAtual) return;
+  const item = comunidadeCache.find(i => i.id === postMenuAtual);
+  await supabaseClient.from('reflexoes').update({ partilhada: false }).eq('id', postMenuAtual);
+  if (item) sincronizarPartilhaLocal(item);
   fecharMenuPost();
+  await renderizarComunidade();
+  mostrarConfirmacao('Arquivado — continua salvo no seu espaço, mas saiu da comunidade');
 }
 
-function removerPostAtual() {
-  const { id, origem, refId } = postMenuAtual;
-
-  if (origem === 'fixo') {
-    const post = postsFixos.find(p => p.id === id);
-    if (post) post.removido = true;
-  } else if (origem === 'anotacao') {
-    const item = anotacoes.find(a => a.id === refId);
-    if (item) item.partilhada = false;
-  } else if (origem === 'agenda') {
-    const item = agendaItens.find(i => i.id === refId);
-    if (item) item.partilhada = false;
-  } else if (origem === 'identidade') {
-    const item = identidadeRespostas[refId];
-    if (item) {
-      item.partilhada = false;
-      adicionarNaFila('identidade', { perguntaIndex: refId, pergunta: perguntas[refId].texto, resposta: item.resposta, partilhada: false });
-      if (estaOnline()) sincronizarFila();
-    }
-  }
-
-  renderizarComunidade();
-  renderizarAnotacoes();
-  renderizarAgenda();
-  renderizarIdentidade();
-  mostrarConfirmacao('Removido da comunidade');
+async function removerPostAtual() {
+  if (!postMenuAtual) return;
+  const item = comunidadeCache.find(i => i.id === postMenuAtual);
+  await supabaseClient.from('reflexoes').update({ partilhada: false }).eq('id', postMenuAtual);
+  if (item) sincronizarPartilhaLocal(item);
   fecharMenuPost();
+  await renderizarComunidade();
+  mostrarConfirmacao('Removido da comunidade');
 }
 
 function mostrarConfirmacao(mensagem) {
