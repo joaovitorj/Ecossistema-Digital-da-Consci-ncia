@@ -517,6 +517,112 @@
     text-decoration-color: rgba(138, 135, 125, 0.3);
   }
 
+  /* ---------- Reconhecimento: tela inicial (Identidade / Começar) ---------- */
+  .reconhecimento-corpo {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 28px 40px;
+    max-width: 520px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .reconhecimento-intro {
+    font-family: 'Fraunces', serif;
+    font-size: 21px;
+    line-height: 1.5;
+    margin: 12px 0 26px;
+  }
+  .reconhecimento-vista { display: none; }
+  .reconhecimento-vista.ativa { display: block; }
+
+  .identidade-item {
+    background: var(--preto-suave);
+    border: 1px solid var(--linha);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .identidade-item-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .identidade-pergunta {
+    font-size: 11px;
+    color: var(--dourado-fraco);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    max-width: 70%;
+    line-height: 1.4;
+  }
+  .identidade-resposta {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--osso);
+    margin-bottom: 12px;
+  }
+  .identidade-item-rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .identidade-partilhar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10.5px;
+    color: var(--osso-fraco);
+    cursor: pointer;
+  }
+  .identidade-reescrever {
+    background: none;
+    border: none;
+    color: var(--osso-fraco);
+    font-size: 11px;
+    text-decoration: underline;
+    text-decoration-color: rgba(138, 135, 125, 0.3);
+    cursor: pointer;
+  }
+  .identidade-dicas {
+    margin-top: 30px;
+    padding: 18px;
+    background: rgba(184, 147, 90, 0.04);
+    border: 1px solid rgba(184, 147, 90, 0.12);
+    border-radius: 14px;
+  }
+  .identidade-dicas h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: var(--osso);
+  }
+  .identidade-dicas p {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--osso-fraco);
+    margin-bottom: 8px;
+  }
+  .identidade-dicas p:last-child { margin-bottom: 0; }
+
+  .historia-final {
+    text-align: center;
+  }
+  .historia-final-texto {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    line-height: 1.7;
+    margin-bottom: 30px;
+    text-align: left;
+  }
+  .historia-final-acoes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
   /* ---------- TELA 3: Território (hub principal) ---------- */
   #tela-territorio {
     z-index: 2;
@@ -1306,15 +1412,77 @@
     </div>
   </div>
 
-  <!-- TELA 2 — RECONHECIMENTO (perguntas) -->
+  <!-- TELA 2 — RECONHECIMENTO (Identidade / Começar / perguntas) -->
   <div class="tela" id="tela-reconhecimento">
     <div class="reconhecimento-topo">
-      <button class="voltar-simples" onclick="irPara('tela-entrada')">‹ voltar</button>
+      <button class="voltar-simples" id="btn-voltar-reconhecimento" onclick="voltarReconhecimento()">‹ voltar</button>
       <span class="marca-mini">reconhecimento</span>
       <span style="width:50px"></span>
     </div>
-    <div class="pergunta-palco" id="palco-pergunta">
-      <!-- injetado via JS -->
+
+    <div class="reconhecimento-corpo">
+      <!-- VISTA 1: início — escolher Identidade ou Começar -->
+      <div class="reconhecimento-vista ativa" id="vista-reconhecimento-inicio">
+        <p class="reconhecimento-intro">Um espaço para se ver com mais clareza — no seu ritmo.</p>
+        <div class="caminhos-grid">
+          <div class="caminho-card" onclick="abrirIdentidade()">
+            <div class="caminho-icone" style="background:rgba(184,147,90,0.12)">◐</div>
+            <div class="caminho-textos">
+              <h3>Identidade</h3>
+              <p>O que você já reconheceu sobre si até agora</p>
+            </div>
+          </div>
+          <div class="caminho-card" onclick="abrirPerguntasEstrategicas()">
+            <div class="caminho-icone" style="background:rgba(107,50,38,0.15)">🕯️</div>
+            <div class="caminho-textos">
+              <h3>Começar</h3>
+              <p>Modo história — novas perguntas para se reconhecer</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA 2: Identidade — respostas dadas + ideias de amadurecimento -->
+      <div class="reconhecimento-vista" id="vista-identidade">
+        <div id="lista-identidade"></div>
+        <div class="identidade-dicas">
+          <h4>Para amadurecer isso</h4>
+          <p>Escreva isso com caneta ou lápis, no papel — o que passa pela mão fica mais real do que o que só passa pela tela.</p>
+          <p>Volte a estas respostas depois de um tempo. O que você reconhece hoje pode ficar mais claro daqui a algumas semanas.</p>
+          <p>Não precisa concordar com quem você era ao responder. Você pode refazer qualquer resposta quando fizer sentido.</p>
+        </div>
+      </div>
+
+      <!-- VISTA 4: perguntas estratégicas — antes de começar a história -->
+      <div class="reconhecimento-vista" id="vista-estrategicas">
+        <p class="reconhecimento-intro">Antes de seguir, você também pode perguntar.</p>
+        <div class="opcoes-resposta" id="lista-perguntas-estrategicas"></div>
+
+        <div class="identidade-dicas" style="margin-top:20px;">
+          <h4>Crie sua própria pergunta</h4>
+          <input type="text" class="campo-livre" id="campo-pergunta-propria"
+                 placeholder="O que você quer perguntar?" style="text-align:left;">
+          <button class="continuar-btn pronto" style="margin-top:14px;" onclick="enviarPerguntaPropria()">Perguntar</button>
+        </div>
+
+        <div class="identidade-dicas" id="resposta-estrategica" style="display:none; margin-top:20px;"></div>
+
+        <div style="margin-top:34px; text-align:center;">
+          <div class="pergunta-numero">antes de seguir</div>
+          <div class="pergunta-texto" style="font-size:19px; min-height:auto;">Você sente que já pode reconhecer um pouco mais?</div>
+          <div class="opcoes-resposta">
+            <button class="opcao" onclick="continuarParaPerguntas()">Sim, vamos começar</button>
+            <button class="opcao" onclick="mostrarVistaReconhecimento('inicio')">Ainda não, só queria olhar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA 3: perguntas — modo história -->
+      <div class="reconhecimento-vista" id="vista-perguntas">
+        <div class="pergunta-palco" id="palco-pergunta">
+          <!-- injetado via JS -->
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1329,6 +1497,7 @@
         <div class="avatar-circulo" onclick="alternarMenuPerfil()">V</div>
         <div id="menu-perfil" class="menu-perfil">
           <button onclick="irPara('tela-interior'); fecharMenuPerfil();">◐ Interior</button>
+          <button onclick="irPara('tela-sobre'); fecharMenuPerfil();">i Infor</button>
           <button id="btn-menu-painel" onclick="irPara('tela-painel'); fecharMenuPerfil(); renderizarPainel();" style="display:none;">✎ Painel</button>
           <button onclick="sairDaConta()">⏻ Sair</button>
         </div>
@@ -1342,7 +1511,7 @@
 
     <p class="secao-label">Caminhos</p>
     <div class="caminhos-grid">
-      <div class="caminho-card" onclick="irPara('tela-reconhecimento'); iniciarPerguntas();">
+      <div class="caminho-card" onclick="mostrarReconhecimentoInicio()">
         <div class="caminho-icone" style="background:rgba(184,147,90,0.12)">🕯️</div>
         <div class="caminho-textos">
           <h3>Reconhecimento</h3>
@@ -1454,6 +1623,26 @@
   </div>
 
   <!-- TELA INTERIOR (dados pessoais, privados) -->
+  <!-- TELA SOBRE — informações sobre o espaço -->
+  <div class="tela" id="tela-sobre">
+    <div class="cadastro-topo">
+      <button class="voltar-simples" onclick="irPara('tela-territorio')">‹ voltar</button>
+    </div>
+    <div class="cadastro-conteudo">
+      <h2 class="cadastro-titulo">Sobre</h2>
+      <p class="cadastro-subtitulo">O que é este espaço, e como usá-lo.</p>
+
+      <p class="interior-valor" style="line-height:1.7; margin-bottom:16px;">
+        Este é um espaço de reconhecimento — não de instrução. As perguntas não têm resposta certa;
+        elas existem para que você perceba o que já está em você, antes de buscar fora.
+      </p>
+      <p class="interior-valor" style="line-height:1.7;">
+        Se você chegou aqui perguntando "como faço algo assim", a resposta começa por reconhecer:
+        você não precisa de um manual para começar. Volte para o Reconhecimento quando quiser continuar.
+      </p>
+    </div>
+  </div>
+
   <div class="tela" id="tela-interior">
     <div class="cadastro-topo">
       <button class="voltar-simples" onclick="irPara('tela-territorio')">‹ voltar</button>
@@ -1662,6 +1851,7 @@ async function carregarDadosDoServidor() {
 
   anotacoes = [];
   agendaItens = [];
+  identidadeRespostas = perguntas.map(() => null);
 
   (data || []).forEach(linha => {
     if (linha.tipo === 'anotacao') {
@@ -1680,11 +1870,17 @@ async function carregarDadosDoServidor() {
         hora: linha.conteudo.hora || '',
         partilhada: linha.partilhada
       });
+    } else if (linha.tipo === 'identidade') {
+      const indice = linha.conteudo.perguntaIndex;
+      if (typeof indice === 'number' && indice >= 0 && indice < identidadeRespostas.length) {
+        identidadeRespostas[indice] = { resposta: linha.conteudo.resposta, partilhada: linha.partilhada };
+      }
     }
   });
 
   renderizarAnotacoes();
   renderizarAgenda();
+  renderizarIdentidade();
   renderizarComunidade();
 }
 
@@ -1740,6 +1936,7 @@ async function sairDaConta() {
   dadosConta = { nome: '', cpf: '', email: '' };
   anotacoes = [];
   agendaItens = [];
+  identidadeRespostas = perguntas.map(() => null);
   localStorage.removeItem('ecossistema_sessao'); // encerra a sessão salva
   // Limpa os campos de login/cadastro para a próxima pessoa
   const camposParaLimpar = ['login-email', 'login-senha', 'campo-nome', 'campo-cpf',
@@ -2222,37 +2419,190 @@ const perguntas = [
   }
 ];
 
+// identidadeRespostas[i] = null (ainda não respondida) ou { resposta, partilhada }
+let identidadeRespostas = perguntas.map(() => null);
 let perguntaAtual = 0;
-let respostas = [];
+let respostaTemp = null;
+let vistaReconhecimentoAtual = 'inicio'; // 'inicio' | 'identidade' | 'perguntas'
+
+// ---------- Navegação entre as 3 vistas do Reconhecimento ----------
+function mostrarVistaReconhecimento(nome) {
+  vistaReconhecimentoAtual = nome;
+  document.querySelectorAll('.reconhecimento-vista').forEach(v => v.classList.remove('ativa'));
+  const idPorNome = { inicio: 'vista-reconhecimento-inicio', identidade: 'vista-identidade', estrategicas: 'vista-estrategicas', perguntas: 'vista-perguntas' };
+  document.getElementById(idPorNome[nome]).classList.add('ativa');
+}
+
+function mostrarReconhecimentoInicio() {
+  irPara('tela-reconhecimento');
+  mostrarVistaReconhecimento('inicio');
+}
+
+function voltarReconhecimento() {
+  if (vistaReconhecimentoAtual === 'inicio') {
+    irPara('tela-territorio');
+  } else {
+    mostrarVistaReconhecimento('inicio');
+  }
+}
+
+// ---------- Identidade — o que já foi reconhecido ----------
+function abrirIdentidade() {
+  renderizarIdentidade();
+  mostrarVistaReconhecimento('identidade');
+}
+
+function renderizarIdentidade() {
+  const lista = document.getElementById('lista-identidade');
+  const respondidas = identidadeRespostas
+    .map((r, i) => (r ? { ...r, indice: i } : null))
+    .filter(Boolean);
+
+  if (respondidas.length === 0) {
+    lista.innerHTML = `
+      <div class="anotacao-vazia">
+        <p>Ainda não há respostas aqui.<br>Toque em "Começar" para dar os primeiros passos.</p>
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = respondidas.map(r => `
+    <div class="identidade-item">
+      <div class="identidade-item-topo">
+        <span class="identidade-pergunta">${perguntas[r.indice].texto}</span>
+      </div>
+      <p class="identidade-resposta">${r.resposta}</p>
+      <div class="identidade-item-rodape">
+        <span class="identidade-partilhar" onclick="alternarPartilhaIdentidade(${r.indice})">
+          <span class="toggle ${r.partilhada ? 'ligado' : ''}"></span> partilhar na comunidade
+        </span>
+        <button class="identidade-reescrever" onclick="reescreverResposta(${r.indice})">reescrever</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function alternarPartilhaIdentidade(indice) {
+  const item = identidadeRespostas[indice];
+  if (!item) return;
+  item.partilhada = !item.partilhada;
+  renderizarIdentidade();
+  renderizarComunidade();
+  adicionarNaFila('identidade', { perguntaIndex: indice, pergunta: perguntas[indice].texto, resposta: item.resposta, partilhada: item.partilhada });
+  if (estaOnline()) sincronizarFila();
+  mostrarConfirmacao(item.partilhada ? 'Enviado à comunidade' : 'Removido da comunidade');
+}
+
+// Única forma de "repetir" uma pergunta já respondida — a pessoa escolhe
+// explicitamente reescrever aquela resposta a partir da Identidade.
+function reescreverResposta(indice) {
+  perguntaAtual = indice;
+  respostaTemp = null;
+  mostrarVistaReconhecimento('perguntas');
+  renderizarPergunta();
+}
+
+// ---------- Perguntas estratégicas — antes de começar a história ----------
+const perguntasEstrategicas = [
+  "Como faço algo assim?",
+  "Por onde eu começo, de verdade?",
+  "Isso vai mudar alguma coisa em mim?"
+];
+
+function abrirPerguntasEstrategicas() {
+  renderizarPerguntasEstrategicas();
+  document.getElementById('resposta-estrategica').style.display = 'none';
+  irPara('tela-reconhecimento');
+  mostrarVistaReconhecimento('estrategicas');
+}
+
+function renderizarPerguntasEstrategicas() {
+  const container = document.getElementById('lista-perguntas-estrategicas');
+  container.innerHTML = perguntasEstrategicas.map(q =>
+    `<button class="opcao" onclick="responderEstrategica(this.textContent)">${q}</button>`
+  ).join('');
+}
+
+function enviarPerguntaPropria() {
+  const input = document.getElementById('campo-pergunta-propria');
+  const texto = input.value.trim();
+  if (texto.length < 3) return;
+
+  // Guarda a pergunta como anotação privada, para não se perder.
+  const agora = new Date();
+  const dataFormatada = agora.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+  const textoAnotacao = `Pergunta: ${texto}`;
+  anotacoes.unshift({ id: proximoIdAnotacao++, texto: textoAnotacao, data: dataFormatada, partilhada: false });
+  renderizarAnotacoes();
+  adicionarNaFila('anotacao', { texto: textoAnotacao, partilhada: false });
+  if (estaOnline()) sincronizarFila();
+
+  input.value = '';
+  responderEstrategica(texto);
+}
+
+function responderEstrategica(pergunta) {
+  const container = document.getElementById('resposta-estrategica');
+  container.innerHTML = `
+    <h4>${pergunta}</h4>
+    <p style="font-family:'Fraunces', serif; font-size:15px; color:var(--osso);">Reconheça isso.</p>
+    <button class="continuar-btn pronto" style="margin-top:4px;" onclick="irPara('tela-sobre')">Seguir para informações</button>
+  `;
+  container.style.display = 'block';
+}
+
+function continuarParaPerguntas() {
+  iniciarPerguntas();
+}
+
+
+function proximoIndiceNaoRespondido(apartirDe) {
+  for (let i = apartirDe; i < perguntas.length; i++) {
+    if (!identidadeRespostas[i]) return i;
+  }
+  return -1;
+}
 
 function iniciarPerguntas() {
-  perguntaAtual = 0;
-  respostas = [];
+  const indice = proximoIndiceNaoRespondido(0);
+  if (indice === -1) {
+    // Todas já foram respondidas alguma vez — não repete sozinho.
+    mostrarConfirmacao('Você já percorreu essas perguntas — reveja em Identidade');
+    abrirIdentidade();
+    return;
+  }
+  perguntaAtual = indice;
+  respostaTemp = null;
+  mostrarVistaReconhecimento('perguntas');
   renderizarPergunta();
 }
 
 function renderizarPergunta() {
   const palco = document.getElementById('palco-pergunta');
   const p = perguntas[perguntaAtual];
+  const respostaExistente = identidadeRespostas[perguntaAtual]?.resposta || '';
 
   let html = `
-    <div class="pergunta-numero">reconhecimento · ${perguntaAtual + 1} de ${perguntas.length}</div>
+    <div class="pergunta-numero">história · capítulo ${perguntaAtual + 1} de ${perguntas.length}</div>
     <div class="pergunta-texto">${p.texto}</div>
   `;
 
   if (p.tipo === 'opcoes') {
     html += `<div class="opcoes-resposta">`;
     p.opcoes.forEach((opcao, i) => {
-      html += `<button class="opcao" onclick="escolherOpcao(${i}, this)">${opcao}</button>`;
+      const escolhida = opcao === respostaExistente ? 'escolhida' : '';
+      html += `<button class="opcao ${escolhida}" onclick="escolherOpcao(${i}, this)">${opcao}</button>`;
     });
     html += `</div>`;
-    html += `<button class="continuar-btn" id="btn-continuar" onclick="proximaPergunta()">Continuar</button>`;
+    html += `<button class="continuar-btn ${respostaExistente ? 'pronto' : ''}" id="btn-continuar" onclick="proximaPergunta()">Continuar</button>`;
   } else {
     html += `
       <input type="text" class="campo-livre" id="campo-livre-input"
              placeholder="${p.placeholder}"
+             value="${respostaExistente}"
              oninput="verificarCampoLivre(this)">
-      <button class="continuar-btn" id="btn-continuar" onclick="proximaPergunta()">Continuar</button>
+      <button class="continuar-btn ${respostaExistente ? 'pronto' : ''}" id="btn-continuar" onclick="proximaPergunta()">Continuar</button>
     `;
   }
 
@@ -2269,7 +2619,7 @@ function renderizarPergunta() {
 function escolherOpcao(indice, elemento) {
   document.querySelectorAll('.opcao').forEach(o => o.classList.remove('escolhida'));
   elemento.classList.add('escolhida');
-  respostas[perguntaAtual] = elemento.textContent;
+  respostaTemp = elemento.textContent;
   document.getElementById('btn-continuar').classList.add('pronto');
   adicionarPontoConstelacao();
 }
@@ -2278,22 +2628,76 @@ function verificarCampoLivre(input) {
   const btn = document.getElementById('btn-continuar');
   if (input.value.trim().length > 2) {
     btn.classList.add('pronto');
-    respostas[perguntaAtual] = input.value;
+    respostaTemp = input.value;
   } else {
     btn.classList.remove('pronto');
   }
 }
 
-function proximaPergunta(pulou = false) {
-  if (pulou) adicionarPontoConstelacao(true);
+function salvarRespostaAtual(resposta) {
+  const partilhadaAnterior = identidadeRespostas[perguntaAtual]?.partilhada || false;
+  identidadeRespostas[perguntaAtual] = { resposta, partilhada: partilhadaAnterior };
+  adicionarNaFila('identidade', {
+    perguntaIndex: perguntaAtual,
+    pergunta: perguntas[perguntaAtual].texto,
+    resposta,
+    partilhada: partilhadaAnterior
+  });
+  if (estaOnline()) sincronizarFila();
+}
 
-  perguntaAtual++;
-  if (perguntaAtual < perguntas.length) {
-    renderizarPergunta();
-  } else {
-    // Fim da sessão — vai para o território
-    irPara('tela-territorio');
+function proximaPergunta(pulou = false) {
+  if (pulou) {
+    adicionarPontoConstelacao(true);
+  } else if (respostaTemp) {
+    salvarRespostaAtual(respostaTemp);
   }
+  respostaTemp = null;
+
+  const proximoIndice = proximoIndiceNaoRespondido(perguntaAtual + 1);
+  if (proximoIndice === -1) {
+    finalizarHistoria();
+  } else {
+    perguntaAtual = proximoIndice;
+    renderizarPergunta();
+  }
+}
+
+// ---------- Fim da história — compartilhar ou guardar ----------
+function finalizarHistoria() {
+  const partes = identidadeRespostas.filter(Boolean).map(r => r.resposta);
+  const textoHistoria = partes.join(' ');
+
+  const palco = document.getElementById('palco-pergunta');
+  palco.innerHTML = `
+    <div class="historia-final">
+      <div class="pergunta-numero">sua história até aqui</div>
+      <p class="historia-final-texto">${textoHistoria}</p>
+      <p style="font-family:'Fraunces', serif; font-style:italic; font-size:14px; color:var(--osso-fraco); margin:-16px 0 26px;">
+        Isso não termina aqui. Sua história continua a cada vez que você volta e reconhece um pouco mais.
+      </p>
+      <div class="historia-final-acoes">
+        <button class="continuar-btn pronto" onclick="guardarHistoriaComo(true)">Compartilhar na comunidade</button>
+        <button class="entrar-btn" style="animation:none;opacity:1;" onclick="guardarHistoriaComo(false)">Guardar em anotações</button>
+        <button class="pular-link" onclick="abrirIdentidade()">ver na Identidade</button>
+      </div>
+    </div>
+  `;
+}
+
+function guardarHistoriaComo(partilhar) {
+  const partes = identidadeRespostas.filter(Boolean).map(r => r.resposta);
+  const texto = partes.join(' ');
+  const agora = new Date();
+  const dataFormatada = agora.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+
+  anotacoes.unshift({ id: proximoIdAnotacao++, texto, data: dataFormatada, partilhada: partilhar });
+  renderizarAnotacoes();
+  if (partilhar) renderizarComunidade();
+  adicionarNaFila('anotacao', { texto, partilhada: partilhar });
+  if (estaOnline()) sincronizarFila();
+  mostrarConfirmacao(partilhar ? 'História enviada à comunidade' : 'Guardada em anotações');
+  irPara('tela-territorio');
 }
 
 // ============================================================
@@ -2622,7 +3026,11 @@ function renderizarComunidade() {
       return { id: `agenda-${i.id}`, origem: 'agenda', refId: i.id, autor: `você — ${marcador}`, texto: i.texto };
     });
 
-  const todas = [...fixosVisiveis, ...anotacoesPartilhadas, ...agendaPartilhada];
+  const identidadePartilhada = identidadeRespostas
+    .map((r, i) => (r && r.partilhada ? { id: `identidade-${i}`, origem: 'identidade', refId: i, autor: 'você — identidade', texto: r.resposta } : null))
+    .filter(Boolean);
+
+  const todas = [...fixosVisiveis, ...anotacoesPartilhadas, ...agendaPartilhada, ...identidadePartilhada];
 
   if (todas.length === 0) {
     container.innerHTML = `
@@ -2683,11 +3091,20 @@ function arquivarPostAtual() {
       postsArquivados.push({ origem, autor: 'você', texto: item.texto });
       item.partilhada = false;
     }
+  } else if (origem === 'identidade') {
+    const item = identidadeRespostas[refId];
+    if (item) {
+      postsArquivados.push({ origem, autor: 'você', texto: item.resposta });
+      item.partilhada = false;
+      adicionarNaFila('identidade', { perguntaIndex: refId, pergunta: perguntas[refId].texto, resposta: item.resposta, partilhada: false });
+      if (estaOnline()) sincronizarFila();
+    }
   }
 
   renderizarComunidade();
   renderizarAnotacoes();
   renderizarAgenda();
+  renderizarIdentidade();
   mostrarConfirmacao('Arquivado');
   fecharMenuPost();
 }
@@ -2704,11 +3121,19 @@ function removerPostAtual() {
   } else if (origem === 'agenda') {
     const item = agendaItens.find(i => i.id === refId);
     if (item) item.partilhada = false;
+  } else if (origem === 'identidade') {
+    const item = identidadeRespostas[refId];
+    if (item) {
+      item.partilhada = false;
+      adicionarNaFila('identidade', { perguntaIndex: refId, pergunta: perguntas[refId].texto, resposta: item.resposta, partilhada: false });
+      if (estaOnline()) sincronizarFila();
+    }
   }
 
   renderizarComunidade();
   renderizarAnotacoes();
   renderizarAgenda();
+  renderizarIdentidade();
   mostrarConfirmacao('Removido da comunidade');
   fecharMenuPost();
 }
